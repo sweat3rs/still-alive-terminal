@@ -1,5 +1,5 @@
 /*
-    Copyright (C) <year>  <name of author>
+    Copyright (C) 2026  Miradge/Sweat3rs
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,11 +15,18 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "print.h"
+#include "Window.h"
+
+using namespace term;
 
 int main()
 {
-    printHello();
+    Window mainWindow{};
+    mainWindow.Print("Hello, World!");
+
+    while (getch() != 'q') {
+        mainWindow.Update();
+    }
 }
 
 //  ___ ___  ___

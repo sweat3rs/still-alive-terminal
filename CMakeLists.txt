@@ -3,10 +3,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_COMPILER )
 
-set(PROJECT_NAME ProjectNAME)
+set(PROJECT_NAME still-alive-terminal)
 set(VERSION "0.0.1")
 
-set(EXECUTABLE_NAME ExeNAME)
+set(EXECUTABLE_NAME still_alive)
 
 project(${PROJECT_NAME} VERSION ${VERSION} LANGUAGES C CXX)
 
@@ -35,8 +35,26 @@ if ((NOT (( CMAKE_SYSTEM_NAME STREQUAL "Darwin") OR (CMAKE_SYSTEM_NAME STREQUAL 
   message(FATAL_ERROR "${PROJECT_NAME} only supports 64-bit MacOS and Windows systems!")
 endif()
 
+# ----------------------------------- Packages ----------------------------------
+
+set(CURSES_NEED_NCURSES true)
+set(CURSES_NEED_WIDE true)
+
+find_package(Curses REQUIRED)
+
+if (NOT Curses_FOUND)
+  message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
+endif()
+
 # ----------------------------------- Add EXE -----------------------------------
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
+# ----------------------------- Include Directories -----------------------------
+
+include_directories(${CURSES_INCLUDE_DIR})
 target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCLUDE_DIR})
+
+# ---------------------------------- Libraries ----------------------------------
+
+target_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})

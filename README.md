@@ -1,1 +1,1 @@
-Sample README
+A rendering of still alive from Portal using a rudementary terminal graphics library using ncurses
