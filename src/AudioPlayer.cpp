@@ -1,5 +1,7 @@
 #include "AudioPlayer.h"
 
+#include <algorithm>
+
 using namespace term;
 
 #define SECONDS_TO_MILLISECONDS(seconds) (uint64_t((seconds)*1000.0))
@@ -13,6 +15,7 @@ AudioPlayer::AudioPlayer()
 AudioPlayer::~AudioPlayer()
 {
     if (m_errorState != MA_SUCCESS) return;
+    ma_sound_set_stop_time_in_milliseconds(&m_sound, 0);
     ma_sound_stop(&m_sound);
 }
 
@@ -26,10 +29,19 @@ void AudioPlayer::StartSound(double delaySeconds)
 {
     if (m_errorState != MA_SUCCESS) return;
     ma_sound_set_start_time_in_milliseconds(&m_sound, SECONDS_TO_MILLISECONDS(delaySeconds));
+    m_errorState = ma_sound_start(&m_sound);
 }
 
 void AudioPlayer::StopSound(double delaySeconds)
 {
     if (m_errorState != MA_SUCCESS) return;
     ma_sound_set_stop_time_in_milliseconds(&m_sound, SECONDS_TO_MILLISECONDS(delaySeconds));
+    m_errorState = ma_sound_stop(&m_sound);
+}
+
+void AudioPlayer::SetVolume(double volume, bool isNorm) {
+    if (m_errorState != MA_SUCCESS) return;
+
+    if (!isNorm) volume /= 100;
+    m_errorState = ma_engine_set_volume(&m_audioEngine, std::max(0.0, volume));
 }

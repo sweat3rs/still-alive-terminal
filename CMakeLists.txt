@@ -57,14 +57,24 @@ elseif(NOT Curses_FOUND)
   message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
 endif()
 
+find_package(Lua REQUIRED)
+
+if (NOT Lua_FOUND)
+  message(FATAL_ERROR "Could not find a supported lua c library. Do you have lua installed on your system?")
+endif()
+
 # ----------------------------------- Add EXE -----------------------------------
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
 # ----------------------------- Include Directories -----------------------------
 
-include_directories(${CURSES_INCLUDE_DIR})
-target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCLUDE_DIR})
+target_include_directories(${EXECUTABLE_NAME} PUBLIC 
+        ${INCLUDE_DIR}
+        ${CURSES_INCLUDE_DIR}
+        ${LUA_INCLUDE_DIR})
+
+message(${LUA_INCLUDE_DIR})
 
 add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
 
@@ -73,4 +83,5 @@ add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/ru
 target_link_libraries(${EXECUTABLE_NAME} 
   ${CURSES_LIBRARIES}
   Curses::Curses
-  panel)
+  panel
+  ${LUA_LIBRARIES})

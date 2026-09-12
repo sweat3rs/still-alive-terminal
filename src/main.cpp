@@ -17,6 +17,7 @@
 
 #include "Window.h"
 #include "AudioPlayer.h"
+#include "LuaReader.h"
 
 #include <array>
 #include <string>
@@ -25,24 +26,67 @@
 #define LYRIC_WINDOW_SIZE (0.95)
 #define CREDITS_WINDOW_SIZE (1.0)
 
+#define LUA_CONFIG_TABLE "config"
+
+std::string CONFIG_FILE{"config.lua"};
+
 // TODO: Add config file for audio offset
 
 using namespace term;
 
+int _argument_handler(const char* argument, int* i_ptr, int argc, char* argv[])
+{
+    if (strcmp(argument, "--ignore-warnings") == 0) {
+        Window::s_ignoreWarnings = true;
+        //std::cout << "Ignoring compatability warnings\n" << std::endl;
+    }
+    else if (strcmp(argument, "--config") == 0) {
+        *i_ptr = (*i_ptr) + 1;
+        if ((*i_ptr) >= argc) return 0;
+    
+        CONFIG_FILE = argv[*i_ptr];
+    }
+    else {
+        return -1;
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc > 1) {
-        if (strcmp(argv[1], "--ignore-warnings") == 0) {
-            Window::s_ignoreWarnings = true;
-            //std::cout << "Ignoring compatability warnings\n" << std::endl;
-        }
-        else {
-            std::cerr << "Unknown flag '" << argv[1] << "'" << std::endl;
-            return 1;
+        for (int i = 1; i < argc; i++) {
+            auto result = _argument_handler(argv[i], &i, argc, argv);
+            if (result == -1) {
+                std::cerr << "Unknown flag '" << argv[1] << "'" << std::endl;
+                return 1;
+            }
         }
     }
 
+    Lua lua{};
+#ifdef SOURCE_RUNTIME_DIRECTORY
+    {
+        std::string filepath = std::string{SOURCE_RUNTIME_DIRECTORY} + CONFIG_FILE;
+        lua.AccessTableFromFile(filepath, LUA_CONFIG_TABLE);
+    }
+
+    if (lua.GetError()) return 1;
+
+    auto volume = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "volume");
+    auto filename = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "filename");
+    auto start_delay = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "start_delay");
+
+    if (volume.type != Lua::NUMBER || filename.type != Lua::STRING || start_delay.type != Lua::NUMBER) {
+        std::cerr << "Lua config file parsing failed!" << std::endl;
+        return 1;
+    }
+#else
+    #error "Source Runtime Directory Not Specified in Compiler"
+#endif
+
     AudioPlayer player{};
+
     std::array<Window, 4> windows;
 
     windows[0] = Window{};
@@ -72,9 +116,14 @@ int main(int argc, char *argv[])
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     //windows[3].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
 
+    player.SetVolume(volume.value.number);
+
 #ifdef SOURCE_RUNTIME_DIRECTORY
-    player.LoadSoundFromFile(SOURCE_RUNTIME_DIRECTORY "still_alive.mp3");
-    player.StartSound(2.0);
+    {
+        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + filename.value.string;
+        player.LoadSoundFromFile(filepath);
+    }
+        player.StartSound(start_delay.value.number);
 #endif
 
     do {

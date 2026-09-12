@@ -16,6 +16,8 @@ namespace term {
             void StartSound(double delaySeconds = 0.0);
             void StopSound(double delaySeconds = 0.0);
 
+            void SetVolume(double volume, bool isNorm = false); // set isNorm to true for 0-1, else it will be 0-100
+
             ma_result GetErrorState() { return m_errorState; }
 
         private:
