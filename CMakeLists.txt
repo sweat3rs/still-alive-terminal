@@ -11,6 +11,8 @@ project(${PROJECT_NAME} VERSION ${VERSION} LANGUAGES C CXX)
 
 # -------------------------------- Directories --------------------------------
 
+set(EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
+
 set(LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_SYSTEM_NAME}/${PRESET_NAME}")
 
 set(STATIC_DIR "${LIBRARY_DIR}/lib")
@@ -22,19 +24,22 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${STATIC_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SHARED_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SHARED_DIR})
 
-# --------------------------------- Set Sources ---------------------------------
+set(MINIAUDIO "${EXTERN_DIR}/miniaudio")
+
+# ------------------------------- Gather Sources --------------------------------
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 FILE(GLOB SOURCES "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.c")
 
 # ------------------------------- Platform Guards -------------------------------
+# I only allow platforms I have tested on, though you are free to remove this section and try it on something else
 
 if ((NOT (( CMAKE_SYSTEM_NAME STREQUAL "Darwin") OR (CMAKE_SYSTEM_NAME STREQUAL "Windows"))) OR (NOT CMAKE_SIZEOF_VOID_P EQUAL 8))
   message(FATAL_ERROR "${PROJECT_NAME} only supports 64-bit MacOS and Windows systems!")
 endif()
 
-# ----------------------------------- Packages ----------------------------------
+# ----------------------------- Dependencies/Packages ----------------------------
 
 set(CURSES_NEED_NCURSES true)
 set(CURSES_NEED_WIDE true)
@@ -65,16 +70,16 @@ endif()
 
 # ----------------------------------- Add EXE -----------------------------------
 
-add_executable(${EXECUTABLE_NAME} ${SOURCES})
+add_executable(${EXECUTABLE_NAME} ${SOURCES} "${MINIAUDIO}/miniaudio.c")
 
 # ----------------------------- Include Directories -----------------------------
 
 target_include_directories(${EXECUTABLE_NAME} PUBLIC 
-        ${INCLUDE_DIR}
-        ${CURSES_INCLUDE_DIR}
-        ${LUA_INCLUDE_DIR})
-
-message(${LUA_INCLUDE_DIR})
+    ${INCLUDE_DIR}
+    ${CURSES_INCLUDE_DIR}
+    ${LUA_INCLUDE_DIR}
+    ${MINIAUDIO}
+)
 
 add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
 
