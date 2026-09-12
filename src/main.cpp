@@ -124,6 +124,8 @@ int main(int argc, char *argv[])
         player.LoadSoundFromFile(filepath);
     }
         player.StartSound(start_delay.value.number);
+#else
+    #error "Source Runtime Directory Not Specified in Compiler"
 #endif
 
     do {
