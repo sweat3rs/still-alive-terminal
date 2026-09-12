@@ -1,9 +1,53 @@
 //  Copyright (C) 2026  Miradge/Sweat3rs
 #include "Window.h"
 
+#include <algorithm>
+
 namespace term
 {
+    Vec2& Vec2::operator+=(const Vec2& other)
+    {
+        x += other.x;
+        y += other.y;
+        return *(this);
+    }
+
+    Vec2& Vec2::operator-=(const Vec2& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        return *(this);
+    }
+
+    Vec2& Vec2::operator*=(const Vec2& other)
+    {
+        x *= other.x;
+        y *= other.y;
+        return *(this);
+    }
+
+    Vec2 Vec2::operator+(const Vec2& other)
+    {
+        return Vec2{x + other.x, y + other.y};
+    }
+
+    Vec2 Vec2::operator-(const Vec2& other)
+    {
+        return Vec2{x - other.x, y - other.y};
+    }
+
+    Vec2 Vec2::operator*(const Vec2& other)
+    {
+        return Vec2{x * other.x, y * other.y};
+    }
+
     uint32_t Window::s_numWindows{0};
+    uint32_t Window::s_counter{0};
+
+    bool Window::s_canChangeColors{false};
+    bool Window::s_hasColors{false};
+    bool Window::s_ignoreWarnings{false};
+
     Error Window::s_globalErrorStatus{NONE};
 
     Window::Window()
@@ -16,15 +60,22 @@ namespace term
             }
         }
 
-        m_window = newwin(LINES, COLS, 0, 0);
+        Vec2 size = GetTerminalSize();
+
+        m_position = {0,0};
+        m_scale = {size.x, size.y};
+
+        m_window = newwin(size.y, size.x, 0, 0);
+        m_panel = new_panel(m_window);
         refresh();
         
         refreshWindow();
 
         s_numWindows++;
+        m_colorIndex = s_counter++;
     }
 
-    Window::Window(uint32_t height, uint32_t width, uint32_t starty, uint32_t startx)
+    Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty)
     {
         if (s_numWindows == 0) {
             Error error = initNCurses();
@@ -34,12 +85,22 @@ namespace term
             }
         }
 
+        m_position = {startx, starty};
+        m_scale = {width, height};
+
         m_window = newwin(height, width, starty, startx);
         refresh();
         
         refreshWindow();
 
         s_numWindows++; 
+        m_colorIndex = s_counter++;
+    }
+
+    Window::Window(Vec2 size, Vec2 position)
+        : Window(size.x, size.y, position.x, position.y)
+    {
+
     }
 
     Window::~Window()
@@ -53,24 +114,138 @@ namespace term
 
         Error Window::Print(const std::string& string)
     {
+        attron(COLOR_PAIR(m_colorIndex));
         wprintw(m_window, string.c_str());
-        refreshWindow();
+        attroff(COLOR_PAIR(m_colorIndex));
+
         return NONE;
+    }
+
+    Error Window::DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
+            chtype tlc, chtype trc, chtype blc, chtype brc)
+    {
+        attron(COLOR_PAIR(m_colorIndex));
+        wborder(m_window, left, right, top, bottom, tlc, trc, blc, brc);
+        attroff(COLOR_PAIR(m_colorIndex));
+        return NONE;
+    }
+
+    Error Window::Refresh()
+    {
+        update_panels();
+        doupdate();
+        return NONE;
+    }
+
+    void Window::SetTop()
+    {
+        top_panel(m_panel);
+    }
+
+    Vec2 Window::GetCursorPosition()
+    {
+        uint32_t x, y;
+        getmaxyx(m_window, y, x);
+        return {x, y};
+    }
+
+    void Window::SetCursorPosition(Vec2 position) 
+    {
+        wmove(m_window, position.y, position.x);
+    }
+
+    Vec2 Window::GetWindowPosition()
+    {
+        return m_position;
+    }
+
+    Vec2 Window::GetWindowSize()
+    {
+        return m_scale;
+    }
+    void Window::MoveWindow(Vec2 delta)
+    {
+        m_position += delta;
+        move_panel(m_panel, m_position.y, m_position.x);
+    }
+
+    void Window::SetWindowPosition(Vec2 position)
+    {
+        m_position = position;
+        move_panel(m_panel, m_position.y, m_position.x);
+    }
+
+    void Window::Show()
+    {
+        show_panel(m_panel);
+        m_hidden = false;
+    }
+    void Window::Hide()
+    {
+        hide_panel(m_panel);
+        m_hidden = true;
     }
 
     Error Window::Update()
     {
-        doupdate();
+        refreshWindow();
+        return NONE;
     }
 
-    void Window::refreshWindow() {
+    void Window::FillBackgroundColor(uint16_t colorIndex)
+    {
+        if (!s_hasColors) return;
+
+        init_pair(m_colorIndex, m_currentColorPair[0], colorIndex);
+        wbkgd(m_window, COLOR_PAIR(m_colorIndex));
+    }
+
+    void Window::SetColor(int16_t foreground, int16_t background)
+    {
+        if (!s_hasColors) return; 
+
+        m_currentColorPair[0] = (foreground == NO_CHANGE ? m_currentColorPair[0] : foreground);
+        m_currentColorPair[1] = (background == NO_CHANGE ? m_currentColorPair[1] : background);
+        init_pair(m_colorIndex, m_currentColorPair[0], m_currentColorPair[1]);
+    }
+
+    void Window::ChangeColorValue(uint16_t colorIndex, Color color)
+    {
+        if (!s_hasColors || !s_canChangeColors) return;
+
+        init_color(colorIndex, std::clamp((int)color.r, 0, 1000), std::clamp((int)color.g, 0, 1000), std::clamp((int)color.b, 0, 1000));
+    }
+
+    void Window::refreshWindow() 
+    {
         wrefresh(m_window);
     }
 
-    Vec2 Window::getTerminalSize() {
+    Vec2 Window::GetGlobalCursorPosition()
+    {
+        if (s_numWindows == 0) {
+            return Vec2{0,0};
+        }
+
         uint32_t x, y;
-        getmaxyx(m_window, y, x);
+        getmaxyx(stdscr, y, x);
         return {x, y};
+    }
+
+    Vec2 Window::GetTerminalSize()
+    {
+        if (s_numWindows == 0) {
+            return Vec2{0,0};
+        }
+
+        uint32_t x, y;
+        getmaxyx(stdscr, y, x);
+        return {x, y};
+    }
+
+    void Window::globalRefresh()
+    {
+        refresh();
     }
 
     Error Window::initNCurses() 
@@ -81,13 +256,23 @@ namespace term
         keypad(stdscr, TRUE);
         curs_set(0);
 
-        if (has_colors() == false || can_change_color() == false) {
-            endwin();
+        s_hasColors = has_colors();
+        if (!s_hasColors && !s_ignoreWarnings) {
+            destroyNCurses();
             std::cerr << "Your terminal doesn't support colors." << std::endl;
+            std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
             return TERMINAL_NOT_SUPPORTED;
         }
 
-        start_color();
+        s_canChangeColors = can_change_color();
+        if (!s_canChangeColors && !s_ignoreWarnings) {
+            destroyNCurses();
+            std::cerr << "Your terminal doesn't support custom colors. Colors might be inaccurate.";
+            std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
+            return TERMINAL_NOT_SUPPORTED;
+        }
+
+        if (s_hasColors) start_color();
         return NONE;
     }
 

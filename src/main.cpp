@@ -17,16 +17,66 @@
 
 #include "Window.h"
 
+#include <array>
+#include <string>
+#include <chrono>
+
+#define LYRIC_WINDOW_SIZE (0.95)
+#define CREDITS_WINDOW_SIZE (1.0)
+
+// TODO: Add config file for audio offset
+
 using namespace term;
 
-int main()
+int main(int argc, char *argv[])
 {
-    Window mainWindow{};
-    mainWindow.Print("Hello, World!");
-
-    while (getch() != 'q') {
-        mainWindow.Update();
+    if (argc > 1) {
+        if (strcmp(argv[1], "--ignore-warnings") == 0) {
+            Window::s_ignoreWarnings = true;
+            //std::cout << "Ignoring compatability warnings\n" << std::endl;
+        }
+        else {
+            std::cerr << "Unknown flag '" << argv[1] << "'" << std::endl;
+            return 1;
+        }
     }
+
+    std::array<Window, 4> windows;
+
+    windows[0] = Window{};
+    if (Window::GetGlobalErrorState() != NONE) return 1;
+
+    Vec2 termSize = Window::GetTerminalSize();
+
+    uint32_t windowWidths = (termSize.x/2) - 1;
+    uint32_t lyricWindowHeight = termSize.y*LYRIC_WINDOW_SIZE;
+    uint32_t creditWindowHeight = termSize.y*LYRIC_WINDOW_SIZE*CREDITS_WINDOW_SIZE*0.5;
+    
+    windows[1] = Window{windowWidths, lyricWindowHeight, 0 , 0};
+    windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2), 0};
+    windows[3] = Window{windowWidths, (termSize.y - creditWindowHeight), (windowWidths + 2), creditWindowHeight};
+
+    Window::ChangeColorValue(COLOR_BLACK, Color{0,0,0});
+    Window::ChangeColorValue(COLOR_YELLOW, Color{1000, 700, 0});
+
+    for (auto& window : windows) {
+        window.FillBackgroundColor(COLOR_BLACK);
+        window.SetColor(COLOR_YELLOW, COLOR_BLACK);
+        window.Update();
+    }
+    Window::Refresh();
+
+    windows[1].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
+    windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
+    //windows[3].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
+
+    do {
+        for (auto& window : windows) {
+            window.Update();
+        }
+
+        Window::Refresh();
+    } while (getch() != 'q');
 }
 
 //  ___ ___  ___

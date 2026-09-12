@@ -1,7 +1,6 @@
 cmake_minimum_required (VERSION 3.10)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 26)
-set(CMAKE_CXX_COMPILER )
 
 set(PROJECT_NAME still-alive-terminal)
 set(VERSION "0.0.1")
@@ -46,6 +45,18 @@ if (NOT Curses_FOUND)
   message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
 endif()
 
+if(Curses_FOUND AND NOT TARGET Curses::Curses)
+  add_library(Curses::Curses INTERFACE IMPORTED)
+  set_target_properties(
+    Curses::Curses
+    PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${CURSES_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CURSES_INCLUDE_DIRS}"
+  )
+elseif(NOT Curses_FOUND)
+  message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
+endif()
+
 # ----------------------------------- Add EXE -----------------------------------
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
@@ -57,4 +68,7 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCLUDE_DIR})
 
 # ---------------------------------- Libraries ----------------------------------
 
-target_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})
+target_link_libraries(${EXECUTABLE_NAME} 
+  ${CURSES_LIBRARIES}
+  Curses::Curses
+  panel)
