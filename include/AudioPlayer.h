@@ -1,3 +1,4 @@
+//  Copyright (C) 2026  Miradge/Sweat3rs
 #pragma once
 
 #include "miniaudio.h"

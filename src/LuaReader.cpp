@@ -1,3 +1,4 @@
+//  Copyright (C) 2026  Miradge/Sweat3rs
 #include "LuaReader.h"
 
 #include <iostream>
