@@ -3,282 +3,281 @@
 
 #include <algorithm>
 
-namespace term
+using namespace term;
+
+Vec2& Vec2::operator+=(const Vec2& other)
 {
-    Vec2& Vec2::operator+=(const Vec2& other)
-    {
-        x += other.x;
-        y += other.y;
-        return *(this);
-    }
+    x += other.x;
+    y += other.y;
+    return *(this);
+}
 
-    Vec2& Vec2::operator-=(const Vec2& other)
-    {
-        x -= other.x;
-        y -= other.y;
-        return *(this);
-    }
+Vec2& Vec2::operator-=(const Vec2& other)
+{
+    x -= other.x;
+    y -= other.y;
+    return *(this);
+}
 
-    Vec2& Vec2::operator*=(const Vec2& other)
-    {
-        x *= other.x;
-        y *= other.y;
-        return *(this);
-    }
+Vec2& Vec2::operator*=(const Vec2& other)
+{
+    x *= other.x;
+    y *= other.y;
+    return *(this);
+}
 
-    Vec2 Vec2::operator+(const Vec2& other)
-    {
-        return Vec2{x + other.x, y + other.y};
-    }
+Vec2 Vec2::operator+(const Vec2& other)
+{
+    return Vec2{x + other.x, y + other.y};
+}
 
-    Vec2 Vec2::operator-(const Vec2& other)
-    {
-        return Vec2{x - other.x, y - other.y};
-    }
+Vec2 Vec2::operator-(const Vec2& other)
+{
+    return Vec2{x - other.x, y - other.y};
+}
 
-    Vec2 Vec2::operator*(const Vec2& other)
-    {
-        return Vec2{x * other.x, y * other.y};
-    }
+Vec2 Vec2::operator*(const Vec2& other)
+{
+    return Vec2{x * other.x, y * other.y};
+}
 
-    uint32_t Window::s_numWindows{0};
-    uint32_t Window::s_counter{0};
+uint32_t Window::s_numWindows{0};
+uint32_t Window::s_counter{0};
 
-    bool Window::s_canChangeColors{false};
-    bool Window::s_hasColors{false};
-    bool Window::s_ignoreWarnings{false};
+bool Window::s_canChangeColors{false};
+bool Window::s_hasColors{false};
+bool Window::s_ignoreWarnings{false};
 
-    Error Window::s_globalErrorStatus{NONE};
+Error Window::s_globalErrorStatus{NONE};
 
-    Window::Window()
-    {
-        if (s_numWindows == 0) {
-            Error error = initNCurses();
-            if (error != NONE) {
-                s_globalErrorStatus = error;
-                return;
-            }
-        }
-
-        Vec2 size = GetTerminalSize();
-
-        m_position = {0,0};
-        m_scale = {size.x, size.y};
-
-        m_window = newwin(size.y, size.x, 0, 0);
-        m_panel = new_panel(m_window);
-        refresh();
-        
-        refreshWindow();
-
-        s_numWindows++;
-        m_colorIndex = s_counter++;
-    }
-
-    Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty)
-    {
-        if (s_numWindows == 0) {
-            Error error = initNCurses();
-            if (error != NONE) {
-                s_globalErrorStatus = error;
-                return;
-            }
-        }
-
-        m_position = {startx, starty};
-        m_scale = {width, height};
-
-        m_window = newwin(height, width, starty, startx);
-        refresh();
-        
-        refreshWindow();
-
-        s_numWindows++; 
-        m_colorIndex = s_counter++;
-    }
-
-    Window::Window(Vec2 size, Vec2 position)
-        : Window(size.x, size.y, position.x, position.y)
-    {
-
-    }
-
-    Window::~Window()
-    {
-        s_numWindows--;
-
-        if (s_numWindows == 0) {
-            destroyNCurses();
+Window::Window()
+{
+    if (s_numWindows == 0) {
+        Error error = initNCurses();
+        if (error != NONE) {
+            s_globalErrorStatus = error;
+            return;
         }
     }
 
-        Error Window::Print(const std::string& string)
-    {
-        attron(COLOR_PAIR(m_colorIndex));
-        wprintw(m_window, string.c_str());
-        attroff(COLOR_PAIR(m_colorIndex));
+    Vec2 size = GetTerminalSize();
 
-        return NONE;
-    }
+    m_position = {0,0};
+    m_scale = {size.x, size.y};
 
-    Error Window::DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
-            chtype tlc, chtype trc, chtype blc, chtype brc)
-    {
-        attron(COLOR_PAIR(m_colorIndex));
-        wborder(m_window, left, right, top, bottom, tlc, trc, blc, brc);
-        attroff(COLOR_PAIR(m_colorIndex));
-        return NONE;
-    }
+    m_window = newwin(size.y, size.x, 0, 0);
+    m_panel = new_panel(m_window);
+    refresh();
+    
+    refreshWindow();
 
-    Error Window::Refresh()
-    {
-        update_panels();
-        doupdate();
-        return NONE;
-    }
+    s_numWindows++;
+    m_colorIndex = s_counter++;
+}
 
-    void Window::SetTop()
-    {
-        top_panel(m_panel);
-    }
-
-    Vec2 Window::GetCursorPosition()
-    {
-        uint32_t x, y;
-        getmaxyx(m_window, y, x);
-        return {x, y};
-    }
-
-    void Window::SetCursorPosition(Vec2 position) 
-    {
-        wmove(m_window, position.y, position.x);
-    }
-
-    Vec2 Window::GetWindowPosition()
-    {
-        return m_position;
-    }
-
-    Vec2 Window::GetWindowSize()
-    {
-        return m_scale;
-    }
-    void Window::MoveWindow(Vec2 delta)
-    {
-        m_position += delta;
-        move_panel(m_panel, m_position.y, m_position.x);
-    }
-
-    void Window::SetWindowPosition(Vec2 position)
-    {
-        m_position = position;
-        move_panel(m_panel, m_position.y, m_position.x);
-    }
-
-    void Window::Show()
-    {
-        show_panel(m_panel);
-        m_hidden = false;
-    }
-    void Window::Hide()
-    {
-        hide_panel(m_panel);
-        m_hidden = true;
-    }
-
-    Error Window::Update()
-    {
-        refreshWindow();
-        return NONE;
-    }
-
-    void Window::FillBackgroundColor(uint16_t colorIndex)
-    {
-        if (!s_hasColors) return;
-
-        init_pair(m_colorIndex, m_currentColorPair[0], colorIndex);
-        wbkgd(m_window, COLOR_PAIR(m_colorIndex));
-    }
-
-    void Window::SetColor(int16_t foreground, int16_t background)
-    {
-        if (!s_hasColors) return; 
-
-        m_currentColorPair[0] = (foreground == NO_CHANGE ? m_currentColorPair[0] : foreground);
-        m_currentColorPair[1] = (background == NO_CHANGE ? m_currentColorPair[1] : background);
-        init_pair(m_colorIndex, m_currentColorPair[0], m_currentColorPair[1]);
-    }
-
-    void Window::ChangeColorValue(uint16_t colorIndex, Color color)
-    {
-        if (!s_hasColors || !s_canChangeColors) return;
-
-        init_color(colorIndex, std::clamp((int)color.r, 0, 1000), std::clamp((int)color.g, 0, 1000), std::clamp((int)color.b, 0, 1000));
-    }
-
-    void Window::refreshWindow() 
-    {
-        wrefresh(m_window);
-    }
-
-    Vec2 Window::GetGlobalCursorPosition()
-    {
-        if (s_numWindows == 0) {
-            return Vec2{0,0};
+Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty)
+{
+    if (s_numWindows == 0) {
+        Error error = initNCurses();
+        if (error != NONE) {
+            s_globalErrorStatus = error;
+            return;
         }
-
-        uint32_t x, y;
-        getmaxyx(stdscr, y, x);
-        return {x, y};
     }
 
-    Vec2 Window::GetTerminalSize()
-    {
-        if (s_numWindows == 0) {
-            return Vec2{0,0};
-        }
+    m_position = {startx, starty};
+    m_scale = {width, height};
 
-        uint32_t x, y;
-        getmaxyx(stdscr, y, x);
-        return {x, y};
+    m_window = newwin(height, width, starty, startx);
+    refresh();
+    
+    refreshWindow();
+
+    s_numWindows++; 
+    m_colorIndex = s_counter++;
+}
+
+Window::Window(Vec2 size, Vec2 position)
+    : Window(size.x, size.y, position.x, position.y)
+{
+
+}
+
+Window::~Window()
+{
+    s_numWindows--;
+
+    if (s_numWindows == 0) {
+        destroyNCurses();
+    }
+}
+
+    Error Window::Print(const std::string& string)
+{
+    attron(COLOR_PAIR(m_colorIndex));
+    wprintw(m_window, string.c_str());
+    attroff(COLOR_PAIR(m_colorIndex));
+
+    return NONE;
+}
+
+Error Window::DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
+        chtype tlc, chtype trc, chtype blc, chtype brc)
+{
+    attron(COLOR_PAIR(m_colorIndex));
+    wborder(m_window, left, right, top, bottom, tlc, trc, blc, brc);
+    attroff(COLOR_PAIR(m_colorIndex));
+    return NONE;
+}
+
+Error Window::Refresh()
+{
+    update_panels();
+    doupdate();
+    return NONE;
+}
+
+void Window::SetTop()
+{
+    top_panel(m_panel);
+}
+
+Vec2 Window::GetCursorPosition()
+{
+    uint32_t x, y;
+    getmaxyx(m_window, y, x);
+    return {x, y};
+}
+
+void Window::SetCursorPosition(Vec2 position) 
+{
+    wmove(m_window, position.y, position.x);
+}
+
+Vec2 Window::GetWindowPosition()
+{
+    return m_position;
+}
+
+Vec2 Window::GetWindowSize()
+{
+    return m_scale;
+}
+void Window::MoveWindow(Vec2 delta)
+{
+    m_position += delta;
+    move_panel(m_panel, m_position.y, m_position.x);
+}
+
+void Window::SetWindowPosition(Vec2 position)
+{
+    m_position = position;
+    move_panel(m_panel, m_position.y, m_position.x);
+}
+
+void Window::Show()
+{
+    show_panel(m_panel);
+    m_hidden = false;
+}
+void Window::Hide()
+{
+    hide_panel(m_panel);
+    m_hidden = true;
+}
+
+Error Window::Update()
+{
+    refreshWindow();
+    return NONE;
+}
+
+void Window::FillBackgroundColor(uint16_t colorIndex)
+{
+    if (!s_hasColors) return;
+
+    init_pair(m_colorIndex, m_currentColorPair[0], colorIndex);
+    wbkgd(m_window, COLOR_PAIR(m_colorIndex));
+}
+
+void Window::SetColor(int16_t foreground, int16_t background)
+{
+    if (!s_hasColors) return; 
+
+    m_currentColorPair[0] = (foreground == NO_CHANGE ? m_currentColorPair[0] : foreground);
+    m_currentColorPair[1] = (background == NO_CHANGE ? m_currentColorPair[1] : background);
+    init_pair(m_colorIndex, m_currentColorPair[0], m_currentColorPair[1]);
+}
+
+void Window::ChangeColorValue(uint16_t colorIndex, Color color)
+{
+    if (!s_hasColors || !s_canChangeColors) return;
+
+    init_color(colorIndex, std::clamp((int)color.r, 0, 1000), std::clamp((int)color.g, 0, 1000), std::clamp((int)color.b, 0, 1000));
+}
+
+void Window::refreshWindow() 
+{
+    wrefresh(m_window);
+}
+
+Vec2 Window::GetGlobalCursorPosition()
+{
+    if (s_numWindows == 0) {
+        return Vec2{0,0};
     }
 
-    void Window::globalRefresh()
-    {
-        refresh();
+    uint32_t x, y;
+    getmaxyx(stdscr, y, x);
+    return {x, y};
+}
+
+Vec2 Window::GetTerminalSize()
+{
+    if (s_numWindows == 0) {
+        return Vec2{0,0};
     }
 
-    Error Window::initNCurses() 
-    {
-        initscr();
-        noecho();
-        cbreak();
-        keypad(stdscr, TRUE);
-        curs_set(0);
+    uint32_t x, y;
+    getmaxyx(stdscr, y, x);
+    return {x, y};
+}
 
-        s_hasColors = has_colors();
-        if (!s_hasColors && !s_ignoreWarnings) {
-            destroyNCurses();
-            std::cerr << "Your terminal doesn't support colors." << std::endl;
-            std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
-            return TERMINAL_NOT_SUPPORTED;
-        }
+void Window::globalRefresh()
+{
+    refresh();
+}
 
-        s_canChangeColors = can_change_color();
-        if (!s_canChangeColors && !s_ignoreWarnings) {
-            destroyNCurses();
-            std::cerr << "Your terminal doesn't support custom colors. Colors might be inaccurate.";
-            std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
-            return TERMINAL_NOT_SUPPORTED;
-        }
+Error Window::initNCurses() 
+{
+    initscr();
+    noecho();
+    cbreak();
+    keypad(stdscr, TRUE);
+    curs_set(0);
 
-        if (s_hasColors) start_color();
-        return NONE;
+    s_hasColors = has_colors();
+    if (!s_hasColors && !s_ignoreWarnings) {
+        destroyNCurses();
+        std::cerr << "Your terminal doesn't support colors." << std::endl;
+        std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
+        return TERMINAL_NOT_SUPPORTED;
     }
 
-    Error Window::destroyNCurses()
-    {
-        endwin();
-        return NONE;
+    s_canChangeColors = can_change_color();
+    if (!s_canChangeColors && !s_ignoreWarnings) {
+        destroyNCurses();
+        std::cerr << "Your terminal doesn't support custom colors. Colors might be inaccurate.";
+        std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
+        return TERMINAL_NOT_SUPPORTED;
     }
+
+    if (s_hasColors) start_color();
+    return NONE;
+}
+
+Error Window::destroyNCurses()
+{
+    endwin();
+    return NONE;
 }

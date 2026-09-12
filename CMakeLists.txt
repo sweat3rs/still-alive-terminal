@@ -26,7 +26,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SHARED_DIR})
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-FILE(GLOB SOURCES "${SOURCE_DIR}/*.cpp")
+FILE(GLOB SOURCES "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.c")
 
 # ------------------------------- Platform Guards -------------------------------
 
@@ -65,6 +65,8 @@ add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
 include_directories(${CURSES_INCLUDE_DIR})
 target_include_directories(${EXECUTABLE_NAME} PUBLIC ${INCLUDE_DIR})
+
+add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
 
 # ---------------------------------- Libraries ----------------------------------
 

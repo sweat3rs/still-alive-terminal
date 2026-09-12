@@ -16,6 +16,7 @@
 */
 
 #include "Window.h"
+#include "AudioPlayer.h"
 
 #include <array>
 #include <string>
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    AudioPlayer player{};
     std::array<Window, 4> windows;
 
     windows[0] = Window{};
@@ -69,6 +71,11 @@ int main(int argc, char *argv[])
     windows[1].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     //windows[3].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
+
+#ifdef SOURCE_RUNTIME_DIRECTORY
+    player.LoadSoundFromFile(SOURCE_RUNTIME_DIRECTORY "still_alive.mp3");
+    player.StartSound(2.0);
+#endif
 
     do {
         for (auto& window : windows) {
