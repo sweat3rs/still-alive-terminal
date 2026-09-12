@@ -1,1 +1,1 @@
-A rendering of still alive from Portal using a rudementary terminal graphics library using ncurses
+A rendering of Still Alive from Portal using a rudementary terminal graphics library using ncurses and miniaudio

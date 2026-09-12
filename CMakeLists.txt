@@ -3,15 +3,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 26)
 
 set(PROJECT_NAME still-alive-terminal)
-set(VERSION "0.0.1")
+set(VERSION "0.1.0")
 
 set(EXECUTABLE_NAME still_alive)
 
 project(${PROJECT_NAME} VERSION ${VERSION} LANGUAGES C CXX)
 
 # -------------------------------- Directories --------------------------------
-
-set(EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
 
 set(LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_SYSTEM_NAME}/${PRESET_NAME}")
 
@@ -24,6 +22,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${STATIC_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SHARED_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SHARED_DIR})
 
+set(EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
 set(MINIAUDIO "${EXTERN_DIR}/miniaudio")
 
 # ------------------------------- Gather Sources --------------------------------
@@ -45,25 +44,11 @@ set(CURSES_NEED_NCURSES true)
 set(CURSES_NEED_WIDE true)
 
 find_package(Curses REQUIRED)
-
 if (NOT Curses_FOUND)
   message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
 endif()
 
-if(Curses_FOUND AND NOT TARGET Curses::Curses)
-  add_library(Curses::Curses INTERFACE IMPORTED)
-  set_target_properties(
-    Curses::Curses
-    PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${CURSES_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${CURSES_INCLUDE_DIRS}"
-  )
-elseif(NOT Curses_FOUND)
-  message(FATAL_ERROR "Could not find a supported ncurses library. Do you have ncurses installed on your system?")
-endif()
-
 find_package(Lua REQUIRED)
-
 if (NOT Lua_FOUND)
   message(FATAL_ERROR "Could not find a supported lua c library. Do you have lua installed on your system?")
 endif()
@@ -71,6 +56,8 @@ endif()
 # ----------------------------------- Add EXE -----------------------------------
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES} "${MINIAUDIO}/miniaudio.c")
+
+add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
 
 # ----------------------------- Include Directories -----------------------------
 
@@ -81,12 +68,10 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
     ${MINIAUDIO}
 )
 
-add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
-
 # ---------------------------------- Libraries ----------------------------------
 
 target_link_libraries(${EXECUTABLE_NAME} 
+  ${LUA_LIBRARIES}
   ${CURSES_LIBRARIES}
-  Curses::Curses
   panel
-  ${LUA_LIBRARIES})
+)

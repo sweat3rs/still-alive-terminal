@@ -23,14 +23,14 @@
 #include <string>
 #include <chrono>
 
-#define LYRIC_WINDOW_SIZE (0.95)
-#define CREDITS_WINDOW_SIZE (1.0)
+#define LYRIC_WINDOW_SIZE 0.95
+#define CREDITS_WINDOW_SIZE 1.0
 
 #define LUA_CONFIG_TABLE "config"
 
 std::string CONFIG_FILE{"config.lua"};
 
-// TODO: Add config file for audio offset
+// TODO: Add SIGWINCH handler
 
 using namespace term;
 
