@@ -42,7 +42,7 @@ Vec2 Vec2::operator*(const Vec2& other)
 }
 
 uint32_t Window::s_numWindows{0};
-uint32_t Window::s_counter{0};
+uint32_t Window::s_counter{1};
 
 bool Window::s_canChangeColors{false};
 bool Window::s_hasColors{false};
@@ -59,20 +59,19 @@ Window::Window()
             return;
         }
     }
-
-    Vec2 size = GetTerminalSize();
-
-    m_position = {0,0};
-    m_scale = {size.x, size.y};
-
-    m_window = newwin(size.y, size.x, 0, 0);
-    m_panel = new_panel(m_window);
-    refresh();
-    
-    refreshWindow();
-
     s_numWindows++;
     m_colorIndex = s_counter++;
+
+    //Vec2 size = GetTerminalSize();
+
+    m_position = {0,0};
+    m_scale = {(u_int16_t)COLS, (uint16_t)LINES};
+
+    m_window = newwin(m_scale.y, m_scale.x, m_position.y, m_position.x);
+    refresh();
+
+    m_panel = new_panel(m_window);
+    Update();
 }
 
 Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty)
@@ -84,17 +83,17 @@ Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty
             return;
         }
     }
+    s_numWindows++;
+    m_colorIndex = s_counter++;
 
     m_position = {startx, starty};
     m_scale = {width, height};
 
-    m_window = newwin(height, width, starty, startx);
+    m_window = newwin(m_scale.y, m_scale.x, m_position.y, m_position.x);
     refresh();
-    
-    refreshWindow();
 
-    s_numWindows++; 
-    m_colorIndex = s_counter++;
+    m_panel = new_panel(m_window);
+    Update();
 }
 
 Window::Window(Vec2 size, Vec2 position)
@@ -114,9 +113,9 @@ Window::~Window()
 
     Error Window::Print(const std::string& string)
 {
-    attron(COLOR_PAIR(m_colorIndex));
-    wprintw(m_window, string.c_str());
-    attroff(COLOR_PAIR(m_colorIndex));
+    wattron(m_window, COLOR_PAIR(m_colorIndex));
+    wprintw(m_window, "%s", string.c_str());
+    wattroff(m_window, COLOR_PAIR(m_colorIndex));
 
     return NONE;
 }
@@ -124,13 +123,15 @@ Window::~Window()
 Error Window::DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
         chtype tlc, chtype trc, chtype blc, chtype brc)
 {
-    attron(COLOR_PAIR(m_colorIndex));
+    wattron(m_window, COLOR_PAIR(m_colorIndex));
     wborder(m_window, left, right, top, bottom, tlc, trc, blc, brc);
-    attroff(COLOR_PAIR(m_colorIndex));
+    wattroff(m_window, COLOR_PAIR(m_colorIndex));
+
+    touchwin(m_window);
     return NONE;
 }
 
-Error Window::Refresh()
+Error Window::Update()
 {
     update_panels();
     doupdate();
@@ -186,10 +187,14 @@ void Window::Hide()
     m_hidden = true;
 }
 
-Error Window::Update()
+void Window::FillBaseScreenColor(uint16_t colorIndex)
 {
-    refreshWindow();
-    return NONE;
+    if (!s_hasColors || s_numWindows == 0) return;
+
+    init_pair(0, -1, colorIndex);
+    bkgd(COLOR_PAIR(0));
+
+    refresh();
 }
 
 void Window::FillBackgroundColor(uint16_t colorIndex)
@@ -198,6 +203,9 @@ void Window::FillBackgroundColor(uint16_t colorIndex)
 
     init_pair(m_colorIndex, m_currentColorPair[0], colorIndex);
     wbkgd(m_window, COLOR_PAIR(m_colorIndex));
+
+    werase(m_window);
+    touchwin(m_window);
 }
 
 void Window::SetColor(int16_t foreground, int16_t background)
@@ -214,6 +222,11 @@ void Window::ChangeColorValue(uint16_t colorIndex, Color color)
     if (!s_hasColors || !s_canChangeColors) return;
 
     init_color(colorIndex, std::clamp((int)color.r, 0, 1000), std::clamp((int)color.g, 0, 1000), std::clamp((int)color.b, 0, 1000));
+}
+
+void Window::Clear()
+{
+    wclear(m_window);
 }
 
 void Window::refreshWindow() 

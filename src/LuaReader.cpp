@@ -18,7 +18,8 @@ Lua::~Lua()
 
 void Lua::AccessTableFromFile(const std::string& file, const std::string& tableName)
 {
-    if (luaL_dofile(m_L, file.c_str()) == LUA_OK) {
+    int32_t result = luaL_dofile(m_L, file.c_str());
+    if (result == LUA_OK) {
         lua_getglobal(m_L, tableName.c_str());
         if (lua_istable(m_L, -1)) {
             m_luaStack.emplace(tableName, lua_gettop(m_L));
@@ -30,8 +31,7 @@ void Lua::AccessTableFromFile(const std::string& file, const std::string& tableN
             m_error = true;
         }
     } else {
-        std::cout << "[C++] Error reading script\n" << std::endl;
-        //luaL_error(m_L, "Error: %s\n", lua_tostring(m_L, -1));
+        std::cout << "[C++] Error reading script: " << lua_tostring(m_L, -1) << std::endl;
         m_error = true;
     }
 }

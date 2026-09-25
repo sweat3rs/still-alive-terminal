@@ -51,7 +51,6 @@ namespace term
             Error DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
                 chtype tlc = 0, chtype trc = 0, chtype blc = 0, chtype brc = 0);
 
-            Error Update(); // update window contents
             void SetTop();
 
             static Error GetGlobalErrorState() { return s_globalErrorStatus; }
@@ -69,12 +68,16 @@ namespace term
             void SetColor(int16_t foreground, int16_t background);
             //static void ResetColors();
 
+            static void FillBaseScreenColor(uint16_t colorIndex);
+
+            void Clear();
+
             static void ChangeColorValue(uint16_t colorIndex, Color color);
 
             void Show();
             void Hide();
 
-            static Error Refresh(); // Panels refresh
+            static Error Update(); // Panels refresh
             static Vec2 GetGlobalCursorPosition();
             static Vec2 GetTerminalSize();
 

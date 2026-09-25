@@ -25,7 +25,9 @@
 
 #define LYRIC_WINDOW_SIZE 0.95
 #define CREDITS_WINDOW_SIZE 1.0
+#define BUFFER_SIZE 1
 
+#define INFO_MESSAGE "Starting... Press \'q\' to quit."
 #define LUA_CONFIG_TABLE "config"
 
 std::string CONFIG_FILE{"config.lua"};
@@ -64,6 +66,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::cout << INFO_MESSAGE << std::endl;
+
     Lua lua{};
 #ifdef SOURCE_RUNTIME_DIRECTORY
     {
@@ -94,23 +98,23 @@ int main(int argc, char *argv[])
 
     Vec2 termSize = Window::GetTerminalSize();
 
-    uint32_t windowWidths = (termSize.x/2) - 1;
-    uint32_t lyricWindowHeight = termSize.y*LYRIC_WINDOW_SIZE;
-    uint32_t creditWindowHeight = termSize.y*LYRIC_WINDOW_SIZE*CREDITS_WINDOW_SIZE*0.5;
+    uint32_t windowWidths = (termSize.x/2) - 1 - BUFFER_SIZE;
+    uint32_t lyricWindowHeight = termSize.y*LYRIC_WINDOW_SIZE - BUFFER_SIZE;
+    uint32_t creditWindowHeight = termSize.y*LYRIC_WINDOW_SIZE*CREDITS_WINDOW_SIZE*0.5 - BUFFER_SIZE;
     
-    windows[1] = Window{windowWidths, lyricWindowHeight, 0 , 0};
-    windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2), 0};
-    windows[3] = Window{windowWidths, (termSize.y - creditWindowHeight), (windowWidths + 2), creditWindowHeight};
+    windows[1] = Window{windowWidths, lyricWindowHeight, BUFFER_SIZE, BUFFER_SIZE};
+    windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2) + BUFFER_SIZE, BUFFER_SIZE};
+    windows[3] = Window{windowWidths, (termSize.y - creditWindowHeight) - BUFFER_SIZE*2, (windowWidths + 2) + BUFFER_SIZE, creditWindowHeight + BUFFER_SIZE};
 
-    Window::ChangeColorValue(COLOR_BLACK, Color{0,0,0});
+    Window::ChangeColorValue(COLOR_BLACK, Color{30,30,30});
     Window::ChangeColorValue(COLOR_YELLOW, Color{1000, 700, 0});
 
     for (auto& window : windows) {
         window.FillBackgroundColor(COLOR_BLACK);
         window.SetColor(COLOR_YELLOW, COLOR_BLACK);
-        window.Update();
     }
-    Window::Refresh();
+
+    Window::Update();
 
     windows[1].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
@@ -129,11 +133,7 @@ int main(int argc, char *argv[])
 #endif
 
     do {
-        for (auto& window : windows) {
-            window.Update();
-        }
-
-        Window::Refresh();
+        Window::Update();
     } while (getch() != 'q');
 }
 

@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.10)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 26)
+cmake_policy(SET CMP0167 OLD)
 
 set(PROJECT_NAME still-alive-terminal)
 set(VERSION "0.1.0")
@@ -41,7 +42,7 @@ endif()
 # ----------------------------- Dependencies/Packages ----------------------------
 
 set(CURSES_NEED_NCURSES true)
-set(CURSES_NEED_WIDE true)
+# set(CURSES_NEED_WIDE true)
 
 find_package(Curses REQUIRED)
 if (NOT Curses_FOUND)
@@ -51,6 +52,11 @@ endif()
 find_package(Lua REQUIRED)
 if (NOT Lua_FOUND)
   message(FATAL_ERROR "Could not find a supported lua c library. Do you have lua installed on your system?")
+endif()
+
+find_package(Boost REQUIRED)
+if (NOT Boost_FOUND)
+  message(FATAL_ERROR "Could not find a supported boost library. Do you have c++ boost libraries installed on your system?")
 endif()
 
 # ----------------------------------- Add EXE -----------------------------------
@@ -63,8 +69,9 @@ add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/ru
 
 target_include_directories(${EXECUTABLE_NAME} PUBLIC 
     ${INCLUDE_DIR}
-    ${CURSES_INCLUDE_DIR}
+    ${CURSES_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
     ${MINIAUDIO}
 )
 
@@ -73,5 +80,6 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
 target_link_libraries(${EXECUTABLE_NAME} 
   ${LUA_LIBRARIES}
   ${CURSES_LIBRARIES}
+  ${Boost_LIBRARIES}
   panel
 )
