@@ -133,6 +133,8 @@ int main(int argc, char *argv[])
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     //windows[3].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
 
+    windows[4].SetCursorHomePos({1, 0});
+
     player.SetVolume(volume.value.number);
 
     std::array<std::mutex, 3> windowMutexes{};
@@ -144,6 +146,9 @@ int main(int argc, char *argv[])
         lyricPrinter.LoadData(filepath);
     }
 
+    using namespace std::chrono_literals;
+    CursorFlash cursorFlash{windows[4], windowMutexes[1], '_', 600ms};
+
     {
         std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + song_file.value.string;
         player.LoadSoundFromFile(filepath);
@@ -152,6 +157,7 @@ int main(int argc, char *argv[])
 #else
     #error "Source Runtime Directory Not Specified in Compiler"
 #endif
+    cursorFlash.Start();
     lyricPrinter.Start();
 
     do {
@@ -160,6 +166,7 @@ int main(int argc, char *argv[])
         for(auto& mutex : windowMutexes) { mutex.unlock(); }
     } while (getch() != 'q');
 
+    cursorFlash.Stop();
     lyricPrinter.Stop();
 }
 

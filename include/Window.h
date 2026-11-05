@@ -47,7 +47,7 @@ namespace term
             Window(Vec2 size, Vec2 position);
             ~Window();
 
-            void SetHomeCursorPos(Vec2 pos) { m_cursorHomePos = pos; }
+            void SetCursorHomePos(Vec2 pos) { m_cursorHomePos = pos; }
             Vec2 GetHomeCursorPos() { return m_cursorHomePos; }
 
             void SetCursorHome() { SetCursorPosition(m_cursorHomePos); }

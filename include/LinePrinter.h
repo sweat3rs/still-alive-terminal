@@ -11,6 +11,37 @@
 
 namespace term 
 {
+    class CursorFlash {
+        public:
+            CursorFlash(Window& win, std::mutex& mutex);
+            CursorFlash(Window& win, std::mutex& mutex, char flashCharacter, std::chrono::milliseconds halfPeriod);
+
+            void setFlashCharacter(char flashCharacter);
+            void setHalfPeriod(std::chrono::milliseconds halfPeriod);
+
+            void Start();
+            void Stop();
+
+        private:
+            void worker();
+            std::thread m_workerThread{};
+
+            void displayCharacter();
+
+            Window& m_window;
+            std::mutex& m_windowMutex;
+
+            char m_flashCharacter;
+            std::chrono::milliseconds m_halfPeriod;
+
+            bool m_isShowing = false;
+
+            std::atomic<bool> m_isRunning = false;
+            std::atomic<bool> m_SIGSTOP = false;
+
+            static const std::chrono::milliseconds sc_timeoutQuanta;
+    };
+
     struct LinePrintOut 
     {
         enum Modifier {
@@ -55,7 +86,10 @@ namespace term
             std::chrono::time_point<std::chrono::system_clock> m_startTime;
 
             std::atomic<bool> m_isRunning = false;
+            std::atomic<bool> m_SIGSTOP = false;
+
             std::atomic<bool> m_errorState = false;
 
+            static const std::chrono::milliseconds sc_timeoutQuanta;
     };
 }
