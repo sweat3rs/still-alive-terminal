@@ -10,6 +10,12 @@ set(EXECUTABLE_NAME still_alive)
 
 project(${PROJECT_NAME} VERSION ${VERSION} LANGUAGES C CXX)
 
+if (MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra)
+endif()
+
 # -------------------------------- Directories --------------------------------
 
 set(LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/bin/${CMAKE_SYSTEM_NAME}/${PRESET_NAME}")

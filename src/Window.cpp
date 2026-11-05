@@ -267,6 +267,7 @@ Error Window::initNCurses()
     noecho();
     cbreak();
     keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
     curs_set(0);
 
     s_hasColors = has_colors();

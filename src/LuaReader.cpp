@@ -39,14 +39,14 @@ void Lua::AccessTableFromFile(const std::string& file, const std::string& tableN
 Lua::Variable Lua::GetFieldFromTable(const std::string& tableName, const std::string& fieldName)
 {
     if (!m_luaStack.contains(tableName) || !lua_istable(m_L, m_luaStack.find(tableName)->second)) {
-        auto var = Variable{0, L_ERROR};
+        auto var = Variable{{0}, L_ERROR};
         var.value.string = "Table doesnt exist";
         return var;
     }
     
     lua_getfield(m_L, m_luaStack.find(tableName)->second, fieldName.c_str());
 
-    auto var = Variable{0, NIL};
+    auto var = Variable{{0}, NIL};
 
     switch (lua_type(m_L, -1)) {
         case LUA_TNIL:
