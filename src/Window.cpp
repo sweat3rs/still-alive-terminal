@@ -111,10 +111,19 @@ Window::~Window()
     }
 }
 
-    Error Window::Print(const std::string& string)
+Error Window::Print(const std::string& string)
 {
     wattron(m_window, COLOR_PAIR(m_colorIndex));
     wprintw(m_window, "%s", string.c_str());
+    wattroff(m_window, COLOR_PAIR(m_colorIndex));
+
+    return NONE;
+}
+
+Error Window::AddCharacter(const char& ch)
+{
+    wattron(m_window, COLOR_PAIR(m_colorIndex));
+    waddch(m_window, ch);
     wattroff(m_window, COLOR_PAIR(m_colorIndex));
 
     return NONE;
@@ -146,7 +155,7 @@ void Window::SetTop()
 Vec2 Window::GetCursorPosition()
 {
     uint32_t x, y;
-    getmaxyx(m_window, y, x);
+    getyx(m_window, y, x);
     return {x, y};
 }
 

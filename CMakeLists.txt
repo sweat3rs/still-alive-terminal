@@ -31,6 +31,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SHARED_DIR})
 
 set(EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
 set(MINIAUDIO "${EXTERN_DIR}/miniaudio")
+set(CSV_PARSER "${EXTERN_DIR}/fast-cpp-csv-parser")
 
 # ------------------------------- Gather Sources --------------------------------
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -79,6 +80,7 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
     ${LUA_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${MINIAUDIO}
+    ${CSV_PARSER}
 )
 
 # ---------------------------------- Libraries ----------------------------------

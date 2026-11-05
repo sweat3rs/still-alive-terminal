@@ -18,10 +18,12 @@
 #include "Window.h"
 #include "AudioPlayer.h"
 #include "LuaReader.h"
+#include "LinePrinter.h"
 
 #include <array>
 #include <string>
 #include <chrono>
+#include <mutex>
 
 #define LYRIC_WINDOW_SIZE 0.95
 #define CREDITS_WINDOW_SIZE 1.0
@@ -78,10 +80,14 @@ int main(int argc, char *argv[])
     if (lua.GetError()) return 1;
 
     auto volume = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "volume");
-    auto filename = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "filename");
+    auto song_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "song_file");
     auto start_delay = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "start_delay");
+    auto print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "print_speed");
+    auto icons_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_file");
+    auto lyrics_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyrics_file");
 
-    if (volume.type != Lua::NUMBER || filename.type != Lua::STRING || start_delay.type != Lua::NUMBER) {
+    if (volume.type != Lua::NUMBER || song_file.type != Lua::STRING || start_delay.type != Lua::NUMBER
+        || print_speed.type != Lua::NUMBER || icons_file.type != Lua::STRING || lyrics_file.type != Lua::STRING) {
         std::cerr << "Lua config file parsing failed!" << std::endl;
         return 1;
     }
@@ -91,7 +97,10 @@ int main(int argc, char *argv[])
 
     AudioPlayer player{};
 
-    std::array<Window, 4> windows;
+    std::array<Window, 7> windows;
+    // 0 - main
+    // 1, 2, 3 - borders
+    // 4, 5, 6 - 3 windows
 
     windows[0] = Window{};
     if (Window::GetGlobalErrorState() != NONE) return 1;
@@ -105,6 +114,10 @@ int main(int argc, char *argv[])
     windows[1] = Window{windowWidths, lyricWindowHeight, BUFFER_SIZE, BUFFER_SIZE};
     windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2) + BUFFER_SIZE, BUFFER_SIZE};
     windows[3] = Window{windowWidths, (termSize.y - creditWindowHeight) - BUFFER_SIZE*2, (windowWidths + 2) + BUFFER_SIZE, creditWindowHeight + BUFFER_SIZE};
+
+    windows[4] = Window{windowWidths - 2, lyricWindowHeight - 2, BUFFER_SIZE + 1, BUFFER_SIZE + 1};
+    windows[5] = Window{windowWidths - 2, creditWindowHeight - 2, (windowWidths + 2) + BUFFER_SIZE + 1, BUFFER_SIZE + 1};
+    windows[6] = Window{windowWidths - 2, (termSize.y - creditWindowHeight) - BUFFER_SIZE*2 - 2, (windowWidths + 2) + BUFFER_SIZE + 1, creditWindowHeight + BUFFER_SIZE + 1};
 
     Window::ChangeColorValue(COLOR_BLACK, Color{30,30,30});
     Window::ChangeColorValue(COLOR_YELLOW, Color{1000, 700, 0});
@@ -122,19 +135,32 @@ int main(int argc, char *argv[])
 
     player.SetVolume(volume.value.number);
 
+    std::array<std::mutex, 3> windowMutexes{};
+
 #ifdef SOURCE_RUNTIME_DIRECTORY
+    LinePrinter lyricPrinter(windows[4], windowMutexes[1], print_speed.value.number);
     {
-        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + filename.value.string;
+        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + lyrics_file.value.string;
+        lyricPrinter.LoadData(filepath);
+    }
+
+    {
+        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + song_file.value.string;
         player.LoadSoundFromFile(filepath);
     }
         player.StartSound(start_delay.value.number);
 #else
     #error "Source Runtime Directory Not Specified in Compiler"
 #endif
+    lyricPrinter.Start();
 
     do {
+        for(auto& mutex : windowMutexes) { mutex.lock(); }
         Window::Update();
+        for(auto& mutex : windowMutexes) { mutex.unlock(); }
     } while (getch() != 'q');
+
+    lyricPrinter.Stop();
 }
 
 //  ___ ___  ___

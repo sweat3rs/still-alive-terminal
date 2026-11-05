@@ -47,7 +47,13 @@ namespace term
             Window(Vec2 size, Vec2 position);
             ~Window();
 
+            void SetHomeCursorPos(Vec2 pos) { m_cursorHomePos = pos; }
+            Vec2 GetHomeCursorPos() { return m_cursorHomePos; }
+
+            void SetCursorHome() { SetCursorPosition(m_cursorHomePos); }
+
             Error Print(const std::string& string);
+            Error AddCharacter(const char& ch);
             Error DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
                 chtype tlc = 0, chtype trc = 0, chtype blc = 0, chtype brc = 0);
 
@@ -103,6 +109,8 @@ namespace term
             Vec2 m_position{};
             Vec2 m_scale{};
             bool m_hidden{false};
+
+            Vec2 m_cursorHomePos{0,0};
 
             PANEL* m_panel{nullptr};
             WINDOW* m_window{nullptr};
