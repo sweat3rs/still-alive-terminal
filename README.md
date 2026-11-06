@@ -31,7 +31,7 @@ By default, all runtime dependencies live in the subdirectory named `"runtime/"`
 
 You can specify a new default runtime directory by passing the `RUNTIME_DIRECTORY=[DIR]` flag to cmake
 
-Alternitavly, you can pass the `NO_RUNTIME_DIRECTORY=true` flag to omit a default runtime directory.
+Alternatively, you can pass the `NO_RUNTIME_DIRECTORY=true` flag to omit a default runtime directory.
 > If NO_RUNTIME_DIRECTORY is set true, config files will be relative to the executables working directory
 
 You can also set the runtime directory at program start using the flag:
