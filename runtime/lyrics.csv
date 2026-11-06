@@ -1,72 +1,74 @@
 Start-Time,Speed,Text,operator
-1.0,1.5,"Forms FORM-29827281-12:",newline
--,1.5,"Test Assessment Report",newline
+1.0,1.2,"Forms FORM-29827281-12:",newline
+-,1.2,"Test Assessment Report",newline
 -,-,,newline
 -,-,,newline
 -,-,,newline
 
 7.5,-,"This was a triumph.",newline
 11.5,-,"I'm making a note here:",newline
-13.5,-,"huge success.",newline
+13.8,1.35,"HUGE ",-
+-,1.5,"SUCCESS.",newline
 
-16.3,-,"It's hard to overstate",newline
--,-,"My satisfaction.",newline
+16.3,1.5,"It's hard to overstate",newline
+-,2.3,"My satisfaction.",newline
 
 23.4,-,"Aperture Science.",newline
 27.4,-,"We do what we must",newline
-29.3,-,"Because we can.",newline
-32.4,-,"For the good of all of us.",newline
-36.0,-,"Except the ones who are dead.",newline
+29.3,1.3,"Because we can.",newline
+32.4,1.9,"For the good of all of us.",newline
+36.0,0.6,"Except the ones who are dead.",newline
 -,-,,newline
 38.2,-,"But there's no sense crying",newline
--,-,"Over every mistake.",newline
+-,1.2,"Over every mistake.",newline
 42.2,-,"You just keep on trying",newline
--,-,"Till you run out of cake.",newline
+-,0.8,"Till you run out of cake.",newline
 46.2,-,"And the Science gets done.",newline
 -,-,"And you make a neat gun.",newline
 -,-,"For the people who are",newline
--,-,"still alive.",newline
+-,1.2,"still",-
+-,1.8," alive.",newline
 52.5,-,,newline
 
-54.2,-,,clear
--,-,"Forms FORM-55551-5:",newline
--,-,"Personnel File Addendum:",newline
+54.4,-,,clear
+-,0.6,"Forms FORM-55551-5:",newline
+-,0.6,"Personnel File Addendum:",newline
 -,-,,newline
-56.5,-,"Dear <<Subject Name Here>>,",newline
+57.0,1.2,"Dear <<Subject Name Here>>,",newline
 -,-,,newline
 
 -,-,"I'm not even angry.",newline
-63.5,-,"I'm being ",-
--,-,"so ",-
--,-,"sincere right now.",newline
-68.5,-,"Even though you broke my heart.",newline
--,-,"And killed me.",newline
+63.5,1.2,"I'm being",-
+-,2.5," so s",-
+-,1.1,"incere right now.",newline
+68.7,1.4,"Even though you broke my heart.",newline
+-,1.1,"And killed me.",newline
 
 75.2,-,"And tore me to pieces.",newline
 79.4,-,"And threw every piece",-
-81.2,-," into",-
--,-," a fire.",newline
-84.6,-,"As they burned it hurt because",newline
-88.0,-,"I was so happy for you!",newline
+81.2,1.85," into",-
+82.0,-," a fire.",newline
+84.6,1.2,"As they burned it hurt because",newline
+88.0,0.9,"I was so happy for you!",newline
 
 90.1,-,"Now these points of data",newline
--,-,"Make a beautiful line.",newline
--,-,"And we're out of beta.",newline
+-,1.1,"Make a beautiful line.",newline
+-,1.1,"And we're out of beta.",newline
 -,-,"We're releasing on time.",newline
--,-,"So I'm GLaD. I got burned.",newline
--,-,"Think of all the things we learned",newline
+97.9,1.1,"So I'm GLaD. I got burned.",newline
+-,0.7,"Think of all the things we learned",newline
 -,-,"For the people who are",newline
 -,-,"still",-
--,-," alive.",newline
+-,2.2," alive.",newline
 
 106.6,-,,clear
--,-,"Forms FORM-55551-6",newline
--,-,"Personnel File Addendum Addendum:",newline
--,-,,newline
--,-,"One last thing:",newline
+-,0.5,"Forms FORM-55551-6",newline
+-,0.5,"Personnel File Addendum Addendum:",newline
+109.2,-,,newline
+-,2.3,"One last thing:",newline
 -,-,,newline
 
--,-,"Go ahead and leave me.",newline
+111.4,-,"Go ahead and leave me.",newline
 -,-,"I think I prefer to stay inside.",newline
 -,-,"Maybe you'll find someone else",newline
 -,-,"To help you.",newline

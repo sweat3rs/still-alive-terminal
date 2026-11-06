@@ -11,7 +11,7 @@ using namespace term;
 
 
 
-const std::chrono::milliseconds LinePrinter::sc_timeoutQuanta = 2ms;
+const std::chrono::milliseconds LinePrinter::sc_timeoutQuanta = 1ms;
 const std::chrono::milliseconds CursorFlash::sc_timeoutQuanta = 4ms;
 
 CursorFlash::CursorFlash(Window& win, std::mutex& mutex)

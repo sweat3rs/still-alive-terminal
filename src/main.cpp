@@ -21,6 +21,9 @@
 #include "LinePrinter.h"
 
 #include <array>
+
+#include <filesystem>
+
 #include <string>
 #include <chrono>
 #include <mutex>
@@ -34,9 +37,16 @@
 
 std::string CONFIG_FILE{"config.lua"};
 
+#ifdef SOURCE_RUNTIME_DIRECTORY
+std::string RUNTIME_DIR{SOURCE_RUNTIME_DIRECTORY};
+#else
+std::string RUNTIME_DIR{};
+#endif
+
 // TODO: Add SIGWINCH handler
 
 using namespace term;
+using namespace std::chrono_literals;
 
 int _argument_handler(const char* argument, int* i_ptr, int argc, char* argv[])
 {
@@ -50,6 +60,15 @@ int _argument_handler(const char* argument, int* i_ptr, int argc, char* argv[])
     
         CONFIG_FILE = argv[*i_ptr];
     }
+    else if (strcmp(argument, "--runtime") == 0) {
+        *i_ptr = (*i_ptr) + 1;
+        if ((*i_ptr) >= argc) return 0;
+    
+        RUNTIME_DIR = argv[*i_ptr];
+        if (RUNTIME_DIR.back() != '/') {
+            RUNTIME_DIR = RUNTIME_DIR + "/";
+        }
+    }
     else {
         return -1;
     }
@@ -58,6 +77,7 @@ int _argument_handler(const char* argument, int* i_ptr, int argc, char* argv[])
 
 int main(int argc, char *argv[])
 {
+    // Arguments
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             auto result = _argument_handler(argv[i], &i, argc, argv);
@@ -70,10 +90,15 @@ int main(int argc, char *argv[])
 
     std::cout << INFO_MESSAGE << std::endl;
 
+    // Config File
+    if (!std::filesystem::exists(RUNTIME_DIR)) {
+        std::cerr << "Runtime directory does not exist!" << std::endl;
+        return 1;
+    }
+
     Lua lua{};
-#ifdef SOURCE_RUNTIME_DIRECTORY
     {
-        std::string filepath = std::string{SOURCE_RUNTIME_DIRECTORY} + CONFIG_FILE;
+        std::string filepath = std::string{RUNTIME_DIR} + CONFIG_FILE;
         lua.AccessTableFromFile(filepath, LUA_CONFIG_TABLE);
     }
 
@@ -91,12 +116,8 @@ int main(int argc, char *argv[])
         std::cerr << "Lua config file parsing failed!" << std::endl;
         return 1;
     }
-#else
-    #error "Source Runtime Directory Not Specified in Compiler"
-#endif
 
-    AudioPlayer player{};
-
+    // Windows
     std::array<Window, 7> windows;
     // 0 - main
     // 1, 2, 3 - borders
@@ -135,28 +156,28 @@ int main(int argc, char *argv[])
 
     windows[4].SetCursorHomePos({1, 0});
 
-    player.SetVolume(volume.value.number);
-
     std::array<std::mutex, 3> windowMutexes{};
 
-#ifdef SOURCE_RUNTIME_DIRECTORY
+    // Text animations
+    CursorFlash cursorFlash{windows[4], windowMutexes[1], '_', 600ms};
     LinePrinter lyricPrinter(windows[4], windowMutexes[1], print_speed.value.number);
     {
-        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + lyrics_file.value.string;
+        std::string filepath = std::string(RUNTIME_DIR) + lyrics_file.value.string;
         lyricPrinter.LoadData(filepath);
     }
 
-    using namespace std::chrono_literals;
-    CursorFlash cursorFlash{windows[4], windowMutexes[1], '_', 600ms};
+
+    // Audio Player
+    AudioPlayer player{};
+    player.SetVolume(volume.value.number);
 
     {
-        std::string filepath = std::string(SOURCE_RUNTIME_DIRECTORY) + song_file.value.string;
+        std::string filepath = std::string(RUNTIME_DIR) + song_file.value.string;
         player.LoadSoundFromFile(filepath);
     }
-        player.StartSound(start_delay.value.number);
-#else
-    #error "Source Runtime Directory Not Specified in Compiler"
-#endif
+
+    // Run
+    player.StartSound(start_delay.value.number);
     cursorFlash.Start();
     lyricPrinter.Start();
 
@@ -166,6 +187,7 @@ int main(int argc, char *argv[])
         for(auto& mutex : windowMutexes) { mutex.unlock(); }
     } while (getch() != 'q');
 
+    // Stop
     cursorFlash.Stop();
     lyricPrinter.Stop();
 }

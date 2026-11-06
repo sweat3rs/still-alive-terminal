@@ -70,7 +70,13 @@ endif()
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES} "${MINIAUDIO}/miniaudio.c")
 
-add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
+if ((DEFINED NO_RUNTIME_DIRECTORY) AND (NO_RUNTIME_DIRECTORY EQUAL true))
+
+elseif(DEFINED RUNTIME_DIRECTORY)
+  add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${RUNTIME_DIRECTORY}/")
+else()
+  add_compile_definitions(SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
+endif()
 
 # ----------------------------- Include Directories -----------------------------
 
