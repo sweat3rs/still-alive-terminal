@@ -1,5 +1,7 @@
 ## A rendering of Still Alive from Portal using the rudementary terminal graphics library ncurses and [miniaudio](https://github.com/mackron/miniaudio)
 
+This was mostly just practice / fun for myself. Press 'q' to quit anytime.
+
 ## Building:
 **Clone** the project:<br>
 ~~~

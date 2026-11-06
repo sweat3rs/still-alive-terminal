@@ -46,7 +46,7 @@ std::string RUNTIME_DIR{SOURCE_RUNTIME_DIRECTORY};
 std::string RUNTIME_DIR{};
 #endif
 
-// TODO: Add SIGWINCH handler
+// TODO: Add SIGWINCH handler, later
 
 using namespace term;
 using namespace std::chrono_literals;
@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Images
     std::array<std::string, 11> imageNames = {
         "empty",
         "aperture",
@@ -255,10 +256,11 @@ int main(int argc, char *argv[])
     creditsPrinter.Start();
     imagePrinter.Start();
 
+    auto c = getch();
     do {
         std::scoped_lock<std::mutex> lock(windowMutex);
         Window::Update();
-    } while (getch() != 'q' && lyricPrinter.IsRunning());
+    } while (c = getch(), c != 'q' && c != KEY_RESIZE && lyricPrinter.IsRunning());
 
     // Stop
     lyricPrinter.Stop();
