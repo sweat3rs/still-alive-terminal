@@ -120,6 +120,5 @@ namespace term
 
             PANEL* m_panel{nullptr};
             WINDOW* m_window{nullptr};
-            Error m_windowErrorStatus{NONE};
     };
 }

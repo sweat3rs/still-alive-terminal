@@ -1,8 +1,15 @@
 ## A rendering of Still Alive from Portal using the rudementary terminal graphics library ncurses and [miniaudio](https://github.com/mackron/miniaudio)
 
-This was mostly just practice / fun for myself. Press 'q' to quit anytime.
+This was mostly just practice / fun for myself. Press 'q' to quit.
 
 ## Building:
+Some **Dependencies** are included as submodules in this repo, but you will need these installed on your system:
+- CMake, just the build system I use
+- Ncurses with the panel library
+- A Lua interpreter / C library
+
+
+---
 **Clone** the project:<br>
 ~~~
 >$ git clone "https://github.com/sweat3rs/still-alive-terminal" --recursive
