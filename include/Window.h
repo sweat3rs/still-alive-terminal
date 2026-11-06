@@ -28,8 +28,8 @@ namespace term
     };
 
     struct Vec2 {
-        uint32_t x;
-        uint32_t y;
+        int32_t x;
+        int32_t y;
 
         Vec2 operator+(const Vec2& other);
         Vec2 operator-(const Vec2& other);
@@ -43,12 +43,14 @@ namespace term
     class Window {
         public:
             Window(); // defaults to fullscreen
-            Window(uint32_t height, uint32_t width, uint32_t starty, uint32_t startx);
+            Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty);
             Window(Vec2 size, Vec2 position);
             ~Window();
 
+            void JustifyCursorPosition() { SetCursorPosition(m_cursorPosition); }
+
             void SetCursorHomePos(Vec2 pos) { m_cursorHomePos = pos; }
-            Vec2 GetHomeCursorPos() { return m_cursorHomePos; }
+            Vec2 GetCursorHomePos() { return m_cursorHomePos; }
 
             void SetCursorHome() { SetCursorPosition(m_cursorHomePos); }
 
@@ -58,6 +60,8 @@ namespace term
                 chtype tlc = 0, chtype trc = 0, chtype blc = 0, chtype brc = 0);
 
             void SetTop();
+
+            void SetScrollOk(bool value);
 
             static Error GetGlobalErrorState() { return s_globalErrorStatus; }
 
@@ -91,6 +95,7 @@ namespace term
 
         private:
             void refreshWindow();
+            void storeCursorPosition();
 
             static void globalRefresh(); // refresh()
             static Error initNCurses();
@@ -106,6 +111,7 @@ namespace term
             std::array<uint16_t, 2> m_currentColorPair{COLOR_WHITE, COLOR_BLACK};
             uint32_t m_colorIndex{0};
 
+            Vec2 m_cursorPosition{0,0};
             Vec2 m_position{};
             Vec2 m_scale{};
             bool m_hidden{false};

@@ -19,8 +19,10 @@
 #include "AudioPlayer.h"
 #include "LuaReader.h"
 #include "LinePrinter.h"
+#include "ImagePrinter.h"
 
 #include <array>
+#include <algorithm>
 
 #include <filesystem>
 
@@ -29,11 +31,12 @@
 #include <mutex>
 
 #define LYRIC_WINDOW_SIZE 0.95
-#define CREDITS_WINDOW_SIZE 1.0
+#define CREDITS_WINDOW_SIZE 0.6
 #define BUFFER_SIZE 1
 
 #define INFO_MESSAGE "Starting... Press \'q\' to quit."
 #define LUA_CONFIG_TABLE "config"
+#define LUA_IMAGE_TABLE "ascii_art"
 
 std::string CONFIG_FILE{"config.lua"};
 
@@ -107,38 +110,74 @@ int main(int argc, char *argv[])
     auto volume = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "volume");
     auto song_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "song_file");
     auto start_delay = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "start_delay");
-    auto print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "print_speed");
+    auto print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyric_print_speed");
+    auto credits_print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "credits_print_speed");
     auto icons_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_file");
+    auto icons_timing = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_timing");
     auto lyrics_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyrics_file");
+    auto credits_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "credits_file");
 
     if (volume.type != Lua::NUMBER || song_file.type != Lua::STRING || start_delay.type != Lua::NUMBER
-        || print_speed.type != Lua::NUMBER || icons_file.type != Lua::STRING || lyrics_file.type != Lua::STRING) {
+        || print_speed.type != Lua::NUMBER || credits_print_speed.type != Lua::NUMBER || icons_file.type != Lua::STRING 
+        || icons_timing.type != Lua::STRING || lyrics_file.type != Lua::STRING || credits_file.type != Lua::STRING) {
         std::cerr << "Lua config file parsing failed!" << std::endl;
         return 1;
     }
 
+    std::array<std::string, 11> imageNames = {
+        "empty",
+        "aperture",
+        "radiation",
+        "atom",
+        "broken_heart",
+        "fire",
+        "checkmark",
+        "explosion",
+        "black_mesa",
+        "cake",
+        "glados"
+    };
+
+    {
+        std::string filepath = std::string{RUNTIME_DIR} + icons_file.value.string;
+        lua.AccessTableFromFile(filepath, LUA_IMAGE_TABLE);
+    }
+
+    auto image_width = lua.GetFieldFromTable(LUA_IMAGE_TABLE, "width");
+    auto image_height = lua.GetFieldFromTable(LUA_IMAGE_TABLE, "height");
+
+    if (image_width.type != Lua::NUMBER || image_height.type != Lua::NUMBER) {
+        std::cerr << "Lua config file parsing failed!" << std::endl;
+        return 1;
+    }
+    Vec2 imageSize{(int32_t)image_width.value.number, (int32_t)image_height.value.number};
+
     // Windows
-    std::array<Window, 7> windows;
+    std::array<Window, 6> windows;
     // 0 - main
-    // 1, 2, 3 - borders
-    // 4, 5, 6 - 3 windows
+    // 1, 2 - borders
+    // 3, 4, 5 - 3 windows
 
     windows[0] = Window{};
     if (Window::GetGlobalErrorState() != NONE) return 1;
 
     Vec2 termSize = Window::GetTerminalSize();
+    // Term min size is <96, 27> 
+    if ((termSize.x < 96 || termSize.y < 27) && !Window::s_ignoreWarnings) {
+        std::cerr << "Terminal window is too small, min size is <96, 27>" << std::endl;
+        return 1;
+    }
 
     uint32_t windowWidths = (termSize.x/2) - 1 - BUFFER_SIZE;
     uint32_t lyricWindowHeight = termSize.y*LYRIC_WINDOW_SIZE - BUFFER_SIZE;
-    uint32_t creditWindowHeight = termSize.y*LYRIC_WINDOW_SIZE*CREDITS_WINDOW_SIZE*0.5 - BUFFER_SIZE;
+    uint32_t creditWindowHeight = std::min(uint32_t(termSize.y*LYRIC_WINDOW_SIZE*CREDITS_WINDOW_SIZE - BUFFER_SIZE), uint32_t(termSize.y - imageSize.y - BUFFER_SIZE*2));
     
     windows[1] = Window{windowWidths, lyricWindowHeight, BUFFER_SIZE, BUFFER_SIZE};
     windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2) + BUFFER_SIZE, BUFFER_SIZE};
-    windows[3] = Window{windowWidths, (termSize.y - creditWindowHeight) - BUFFER_SIZE*2, (windowWidths + 2) + BUFFER_SIZE, creditWindowHeight + BUFFER_SIZE};
+    windows[3] = Window{(uint32_t)imageSize.x, (uint32_t)imageSize.y + BUFFER_SIZE*2, ((windowWidths + 2) + BUFFER_SIZE) + (windowWidths/2 - imageSize.x/2), (creditWindowHeight + BUFFER_SIZE) + std::min((termSize.y - (creditWindowHeight + BUFFER_SIZE)/2 - imageSize.y/2), (uint32_t)0)};
 
     windows[4] = Window{windowWidths - 2, lyricWindowHeight - 2, BUFFER_SIZE + 1, BUFFER_SIZE + 1};
     windows[5] = Window{windowWidths - 2, creditWindowHeight - 2, (windowWidths + 2) + BUFFER_SIZE + 1, BUFFER_SIZE + 1};
-    windows[6] = Window{windowWidths - 2, (termSize.y - creditWindowHeight) - BUFFER_SIZE*2 - 2, (windowWidths + 2) + BUFFER_SIZE + 1, creditWindowHeight + BUFFER_SIZE + 1};
 
     Window::ChangeColorValue(COLOR_BLACK, Color{30,30,30});
     Window::ChangeColorValue(COLOR_YELLOW, Color{1000, 700, 0});
@@ -154,18 +193,49 @@ int main(int argc, char *argv[])
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     //windows[3].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
 
+    std::mutex windowMutex{};
+
+    // Lyric animations
     windows[4].SetCursorHomePos({1, 0});
 
-    std::array<std::mutex, 3> windowMutexes{};
-
-    // Text animations
-    CursorFlash cursorFlash{windows[4], windowMutexes[1], '_', 600ms};
-    LinePrinter lyricPrinter(windows[4], windowMutexes[1], print_speed.value.number);
+    CursorFlash cursorFlashLyric{windows[4], windowMutex, '_', 600ms};
+    LinePrinter lyricPrinter(windows[4], windowMutex, print_speed.value.number);
     {
         std::string filepath = std::string(RUNTIME_DIR) + lyrics_file.value.string;
         lyricPrinter.LoadData(filepath);
     }
 
+    // Credit names
+    windows[5].SetCursorHomePos({1, windows[5].GetWindowSize().y - 1});
+    windows[5].SetCursorHome();
+    windows[5].SetScrollOk(true);
+
+    CursorFlash cursorFlashCredit{windows[5], windowMutex, '_', 300ms};
+    LinePrinter creditsPrinter(windows[5], windowMutex, credits_print_speed.value.number);
+    {
+        std::string filepath = std::string(RUNTIME_DIR) + credits_file.value.string;
+        creditsPrinter.LoadData(filepath);
+        
+        uint32_t numExtraLines = (uint32_t)(windows[5].GetWindowSize().y/2) - 1;
+        LinePrintOut line{};
+        line.line = "  ";
+        line.lineModifier = LinePrintOut::NEWLINE;
+        line.printTimePerCharacterMilliseconds = std::chrono::milliseconds{(uint32_t)(credits_print_speed.value.number*2.0)};
+        for (uint32_t i = 0; i < numExtraLines; i++) { creditsPrinter.PushLine(line); }
+    }
+
+    // Ascii Art
+    ImagePrinter imagePrinter{windows[3], windowMutex};
+    for (auto& name : imageNames) {
+        auto image = lua.GetFieldFromTable(LUA_IMAGE_TABLE, name);
+        if (image.type == Lua::STRING) {
+            imagePrinter.addImage(name, image.value.string);
+        }
+    }
+    {
+        std::string filepath = std::string(RUNTIME_DIR) + icons_timing.value.string;
+        imagePrinter.loadTimingData(filepath);
+    }
 
     // Audio Player
     AudioPlayer player{};
@@ -178,18 +248,24 @@ int main(int argc, char *argv[])
 
     // Run
     player.StartSound(start_delay.value.number);
-    cursorFlash.Start();
+    cursorFlashLyric.Start();
+    cursorFlashCredit.Start();
+
     lyricPrinter.Start();
+    creditsPrinter.Start();
+    imagePrinter.Start();
 
     do {
-        for(auto& mutex : windowMutexes) { mutex.lock(); }
+        std::scoped_lock<std::mutex> lock(windowMutex);
         Window::Update();
-        for(auto& mutex : windowMutexes) { mutex.unlock(); }
-    } while (getch() != 'q');
+    } while (getch() != 'q' && lyricPrinter.IsRunning());
 
     // Stop
-    cursorFlash.Stop();
     lyricPrinter.Stop();
+    creditsPrinter.Stop();
+    imagePrinter.Stop();
+    cursorFlashLyric.Stop();
+    cursorFlashCredit.Stop();
 }
 
 //  ___ ___  ___

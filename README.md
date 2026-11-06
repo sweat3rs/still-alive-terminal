@@ -44,9 +44,14 @@ Config options:
 - > `volume`, the song volume, a number 0-100 or 0-1 if less than 1
 - > `start_delay`, the delay, in seconds, the audio file starts playing after the program starts
 - > `song_file`, a string for the name of the audio file, relative to the runtime directory
-- > `print_speed`, default print speed for the text animations, changing this alone will mess up timing
-- > `icons_file` = a string for the name of the icons file, relative to the runtime directory. This is the file that holds the ascii art
-- > `lyrics_file` = a string for the name of the lyrics csv file, relative to the runtime directory. This contains lyrics and timing info
+- > `lyric_print_speed` / `credits_print_speed`, base print speed for the text animations, changing this alone will mess up timing
+- > `icons_file` = a string for the name of the icons lua file, relative to the runtime directory. This is the file that holds the ascii art
+- > `lyrics_file` / `credits_file` / `icons_timing` = strings for the names of csv files, relative to the runtime directory, with text and timing info.
+
 
 ## Terminal Compatability:
 If compatiability issues with the terminal are found due to color or size, the program will exit. You can ignore these by passing the flag: `--ignore-warnings`
+
+## Copyright Notice
+
+All source files written by me are licensed under the GNU GPL license. Some resources used in this project like the song and its lyrics, the ascii art, and the credits belong to Valve and Jonathan Coulton. They are not mine, thus they aren't licensed by me nor under this general license.

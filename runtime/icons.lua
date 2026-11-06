@@ -1,5 +1,6 @@
 global ascii_art = {
-    num_lines = 20,
+    width = 46,
+    height = 20,
     empty = [[
 
 

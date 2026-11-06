@@ -19,6 +19,8 @@ namespace term
             void setFlashCharacter(char flashCharacter);
             void setHalfPeriod(std::chrono::milliseconds halfPeriod);
 
+            bool IsRunning() { return m_isRunning.load(); }
+
             void Start();
             void Stop();
 
@@ -51,12 +53,12 @@ namespace term
         };
 
         std::string line;
-        std::queue<char> charOutQueue{};
+        Modifier lineModifier{NONE};
 
         std::chrono::milliseconds printTimePerCharacterMilliseconds{0};
         std::chrono::milliseconds startTimeMilliseconds{0};
 
-        Modifier lineModifier{NONE};
+        std::queue<char> charOutQueue{};
 
         // add timer
     };
@@ -69,6 +71,9 @@ namespace term
             ~LinePrinter();
 
             void LoadData(const std::string& file);
+            void PushLine(const LinePrintOut& line);
+
+            bool IsRunning() { return m_isRunning.load(); }
 
             void Start();
             void Stop();

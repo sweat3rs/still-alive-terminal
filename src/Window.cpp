@@ -86,8 +86,8 @@ Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty
     s_numWindows++;
     m_colorIndex = s_counter++;
 
-    m_position = {startx, starty};
-    m_scale = {width, height};
+    m_position = {(int32_t)startx, (int32_t)starty};
+    m_scale = {(int32_t)width, (int32_t)height};
 
     m_window = newwin(m_scale.y, m_scale.x, m_position.y, m_position.x);
     refresh();
@@ -111,12 +111,18 @@ Window::~Window()
     }
 }
 
+void Window::storeCursorPosition()
+{
+    m_cursorPosition = GetCursorPosition();
+}
+
 Error Window::Print(const std::string& string)
 {
     wattron(m_window, COLOR_PAIR(m_colorIndex));
     wprintw(m_window, "%s", string.c_str());
     wattroff(m_window, COLOR_PAIR(m_colorIndex));
 
+    storeCursorPosition();
     return NONE;
 }
 
@@ -126,6 +132,7 @@ Error Window::AddCharacter(const char& ch)
     waddch(m_window, ch);
     wattroff(m_window, COLOR_PAIR(m_colorIndex));
 
+    storeCursorPosition();
     return NONE;
 }
 
@@ -156,12 +163,13 @@ Vec2 Window::GetCursorPosition()
 {
     uint32_t x, y;
     getyx(m_window, y, x);
-    return {x, y};
+    return {(int32_t)x, (int32_t)y};
 }
 
 void Window::SetCursorPosition(Vec2 position) 
 {
     wmove(m_window, position.y, position.x);
+    m_cursorPosition = position;
 }
 
 Vec2 Window::GetWindowPosition()
@@ -177,12 +185,14 @@ void Window::MoveWindow(Vec2 delta)
 {
     m_position += delta;
     move_panel(m_panel, m_position.y, m_position.x);
+    update_panels();
 }
 
 void Window::SetWindowPosition(Vec2 position)
 {
     m_position = position;
     move_panel(m_panel, m_position.y, m_position.x);
+    update_panels();
 }
 
 void Window::Show()
@@ -238,6 +248,11 @@ void Window::Clear()
     wclear(m_window);
 }
 
+void Window::SetScrollOk(bool value)
+{
+    scrollok(m_window, value);
+}
+
 void Window::refreshWindow() 
 {
     wrefresh(m_window);
@@ -251,7 +266,7 @@ Vec2 Window::GetGlobalCursorPosition()
 
     uint32_t x, y;
     getmaxyx(stdscr, y, x);
-    return {x, y};
+    return {(int32_t)x, (int32_t)y};
 }
 
 Vec2 Window::GetTerminalSize()
@@ -262,7 +277,7 @@ Vec2 Window::GetTerminalSize()
 
     uint32_t x, y;
     getmaxyx(stdscr, y, x);
-    return {x, y};
+    return {(int32_t)x, (int32_t)y};
 }
 
 void Window::globalRefresh()

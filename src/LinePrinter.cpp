@@ -5,14 +5,13 @@
 
 using namespace std::literals::chrono_literals;
 
-#define MILLISECONDS_SINCE_POINT(x) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - (x).time_since_epoch())
+#define MILLISECONDS_SINCE_POINT(x) (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - (x).time_since_epoch()))
+#define MICROSECONDS_SINCE_POINT(x) (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch() - (x).time_since_epoch()))
 
 using namespace term;
 
-
-
 const std::chrono::milliseconds LinePrinter::sc_timeoutQuanta = 1ms;
-const std::chrono::milliseconds CursorFlash::sc_timeoutQuanta = 4ms;
+const std::chrono::milliseconds CursorFlash::sc_timeoutQuanta = 1ms;
 
 CursorFlash::CursorFlash(Window& win, std::mutex& mutex)
     : m_window(win), m_windowMutex(mutex) {
@@ -42,8 +41,6 @@ void CursorFlash::Start()
 
 void CursorFlash::Stop()
 {
-    if (!m_isRunning) return;
-
     m_SIGSTOP = true;
     if (m_workerThread.joinable()) {
         m_workerThread.join();
@@ -54,15 +51,17 @@ void CursorFlash::displayCharacter()
 {
     if (m_isShowing) {
         std::scoped_lock<std::mutex> lock(m_windowMutex);
-            Window::Update();
-            m_window.AddCharacter(m_flashCharacter);
-            auto pos = m_window.GetCursorPosition();
-            pos.x -= 1;
-            m_window.SetCursorPosition(pos);
+        Window::Update();
+        m_window.JustifyCursorPosition();
+        m_window.AddCharacter(m_flashCharacter);
+        auto pos = m_window.GetCursorPosition();
+        pos.x -= 1;
+        m_window.SetCursorPosition(pos);
     }
     else {
         std::scoped_lock<std::mutex> lock(m_windowMutex);
         Window::Update();
+        m_window.JustifyCursorPosition();
         m_window.AddCharacter(' ');
         auto pos = m_window.GetCursorPosition();
         pos.x -= 1;
@@ -113,7 +112,7 @@ void LinePrinter::LoadData(const std::string& file)
             // process line
             LinePrintOut line;
 
-            if (start_time.empty() || start_time == "_") { line.startTimeMilliseconds = 0ms; } 
+            if (start_time.empty() || start_time == "-") { line.startTimeMilliseconds = 0ms; } 
             else { line.startTimeMilliseconds = std::chrono::milliseconds{(uint32_t)(atof(start_time.c_str())*1000.0)}; }
 
             if (print_speed_mult.empty() || atof(print_speed_mult.c_str()) <= 0.0) {
@@ -138,6 +137,13 @@ void LinePrinter::LoadData(const std::string& file)
     }
 }
 
+void LinePrinter::PushLine(const LinePrintOut& line)
+{
+    if (m_isRunning) return;
+    m_linesOutQueue.push(line);
+    for (char character : m_linesOutQueue.back().line) { m_linesOutQueue.back().charOutQueue.push(character); }
+}
+
 void LinePrinter::Start()
 {
     if (m_errorState) return;
@@ -149,7 +155,7 @@ void LinePrinter::Start()
 
 void LinePrinter::Stop()
 {
-    if (m_errorState || !m_isRunning) return;
+    if (m_errorState) return;
 
     m_SIGSTOP = true;
     if (m_workerThread.joinable()) {
@@ -158,10 +164,10 @@ void LinePrinter::Stop()
     
 }
 
-//TODO: Add precise time checking and adjustment
 void LinePrinter::worker()
 {
     m_isRunning = true;
+    std::chrono::microseconds delta = 0ms;
 
     while (!m_linesOutQueue.empty() && !m_errorState && !m_SIGSTOP) {
         if (m_linesOutQueue.front().startTimeMilliseconds != 0ms) {
@@ -170,32 +176,38 @@ void LinePrinter::worker()
                 std::this_thread::sleep_for(sc_timeoutQuanta);
             }
         }
-        
+
+        delta = 0ms;
         while (!m_linesOutQueue.front().charOutQueue.empty() && !m_SIGSTOP) {
             {
                 std::scoped_lock<std::mutex> lock(m_windowMutex);
+                m_window.JustifyCursorPosition();
                 m_window.AddCharacter(m_linesOutQueue.front().charOutQueue.front());
                 m_linesOutQueue.front().charOutQueue.pop();
             }
             auto start = std::chrono::system_clock::now();
             if (m_linesOutQueue.front().charOutQueue.size() > 0) {
-                while (m_linesOutQueue.front().printTimePerCharacterMilliseconds > MILLISECONDS_SINCE_POINT(start) && !m_SIGSTOP) {
+                while ((std::chrono::duration_cast<std::chrono::microseconds>(m_linesOutQueue.front().printTimePerCharacterMilliseconds) - delta) > MICROSECONDS_SINCE_POINT(start) && !m_SIGSTOP) {
                     std::this_thread::sleep_for(sc_timeoutQuanta);
                 }
             }
+            delta = MICROSECONDS_SINCE_POINT(start) - std::chrono::duration_cast<std::chrono::microseconds>(m_linesOutQueue.front().printTimePerCharacterMilliseconds) + delta;
         }
 
         switch (m_linesOutQueue.front().lineModifier) {
             case LinePrintOut::Modifier::NEWLINE:
                 {
                     std::scoped_lock<std::mutex> lock(m_windowMutex);
+                    m_window.JustifyCursorPosition();
                     m_window.AddCharacter(' ');
-                    m_window.SetCursorPosition(Vec2{m_window.GetHomeCursorPos().x, (m_window.GetCursorPosition().y + 1)}); // newline
+                    m_window.AddCharacter('\n');
+                    m_window.SetCursorPosition(Vec2{m_window.GetCursorHomePos().x, m_window.GetCursorPosition().y}); // newline
                 }
                 break;
             case LinePrintOut::Modifier::CLEAR:
                 {
                     std::scoped_lock<std::mutex> lock(m_windowMutex);
+                    m_window.JustifyCursorPosition();
                     m_window.Clear();
                     m_window.SetCursorHome();
                 }
