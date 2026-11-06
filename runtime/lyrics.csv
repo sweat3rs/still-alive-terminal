@@ -15,17 +15,17 @@ Start-Time,Speed,Text,operator
 
 23.4,-,"Aperture Science.",newline
 27.4,-,"We do what we must",newline
-29.4,1.3,"Because we can.",newline
+29.2,1.3,"Because we can.",newline
 32.4,1.9,"For the good of all of us.",newline
 36.0,0.7,"Except the ones who are dead.",newline
 -,-,,newline
 38.2,-,"But there's no sense crying",newline
 -,1.2,"Over every mistake.",newline
 42.25,-,"You just keep on trying",newline
--,0.9,"Till you run out of cake.",newline
-46.2,-,"And the Science gets done.",newline
+-,1.15,"Till you run out of cake.",newline
+46.2,1.05,"And the Science gets done.",newline
 -,1.1,"And you make a neat gun.",newline
--,1.1,"For the people who are",newline
+-,1.2,"For the people who are",newline
 -,1.2,"still",-
 -,1.8," alive.",newline
 52.5,-,,newline
@@ -40,8 +40,8 @@ Start-Time,Speed,Text,operator
 -,-,"I'm not even angry.",newline
 63.5,1.2,"I'm being",-
 -,2.5," so s",-
--,1.15,"incere right now.",newline
-68.7,1.4,"Even though you broke my heart.",newline
+-,1.25,"incere right now.",newline
+68.7,1.6,"Even though you broke my heart.",newline
 -,1.2,"And killed me.",newline
 
 75.2,-,"And tore me to pieces.",newline
@@ -52,12 +52,12 @@ Start-Time,Speed,Text,operator
 88.0,0.9,"I was so happy for you!",newline
 
 90.1,-,"Now these points of data",newline
--,1.4,"Make a beautiful line.",newline
+-,1.5,"Make a beautiful line.",newline
 -,1.4,"And we're out of beta.",newline
 -,1.19,"We're releasing on time.",newline
 97.9,1.1,"So I'm GLaD. I got burned.",newline
--,0.8,"Think of all the things we learned",newline
--,0.9,"For the people who are",newline
+-,0.9,"Think of all the things we learned",newline
+-,1.1,"For the people who are",newline
 -,-,"still",-
 -,2.4," alive.",newline
 
@@ -70,9 +70,9 @@ Start-Time,Speed,Text,operator
 
 111.4,-,"Go ahead and leave",-
 -,2.4," me.",newline
-115.2,1.4,"I think I prefer to stay inside.",newline
+115.2,1.5,"I think I prefer to stay inside.",newline
 120.3,1.8,"Maybe you'll find someone else",newline
--,1.0,"To help you.",newline
+-,1.2,"To help you.",newline
 127.5,1.1,"Maybe Black",-
 -,2.2," Mesa...",newline
 131.7,1.3,"THAT WAS A JOKE.",-
@@ -87,7 +87,7 @@ Start-Time,Speed,Text,operator
 146.2,-,"When I look out there",newline
 -,1.2,"It makes me GLaD I'm not you.",newline
 
-150.5,0.9,"I've experiments to run",newline
+150.3,0.9,"I've experiments to run",newline
 -,1.0,"There is research to be done",newline
 154.1,1.0,"On the people who are",newline
 155.5,-,"still",-
