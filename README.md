@@ -5,7 +5,7 @@ This was mostly just practice / fun for myself. Press 'q' to quit anytime.
 ## Building:
 **Clone** the project:<br>
 ~~~
->$ git clone "https://github.com/sweat3rs0/still-alive-terminal" --recursive
+>$ git clone "https://github.com/sweat3rs/still-alive-terminal" --recursive
 ~~~
 
 cd into the project directory:
