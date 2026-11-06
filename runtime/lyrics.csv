@@ -54,7 +54,7 @@ Start-Time,Speed,Text,operator
 90.1,-,"Now these points of data",newline
 -,1.4,"Make a beautiful line.",newline
 -,1.4,"And we're out of beta.",newline
--,1.23,"We're releasing on time.",newline
+-,1.19,"We're releasing on time.",newline
 97.9,1.1,"So I'm GLaD. I got burned.",newline
 -,0.8,"Think of all the things we learned",newline
 -,0.9,"For the people who are",newline
@@ -116,4 +116,4 @@ Start-Time,Speed,Text,operator
 177.6,1.5,"STILL ALIVE",newline
 
 -,-,,clear
-185.0,-,,clear
+188.0,-,,clear
