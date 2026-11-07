@@ -32,14 +32,18 @@ Build using cmake, for example:
 
 >$ make
 ~~~
+---
+If the linker cant find the ncurses panel library, you can pass the `LIBPANEL=[LIBRARY NAME]` variable definition to cmake
+
+> Some ncurses versions on some platforms require windows to be refreshed every update. Use the `FORCE_WINDOW_REFRESH=[BOOL]` cmake variable definition to force a build with window refreshing either on or off.
 
 ## Runtime Files:
 
 By default, all runtime dependencies live in the subdirectory named `"runtime/"` relative to where you built the project.
 
-You can specify a new default runtime directory by passing the `RUNTIME_DIRECTORY=[DIR]` flag to cmake
+You can specify a new default runtime directory by passing the `RUNTIME_DIRECTORY=[DIR]` variable definition to cmake
 
-Alternatively, you can pass the `NO_RUNTIME_DIRECTORY=true` flag to omit a default runtime directory.
+Alternatively, you can pass the `NO_RUNTIME_DIRECTORY=true` variable definition to omit a default runtime directory.
 > If NO_RUNTIME_DIRECTORY is set true, config files will be relative to the executables working directory
 
 You can also set the runtime directory at program start using the flag:

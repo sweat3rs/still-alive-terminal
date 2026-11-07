@@ -44,8 +44,12 @@ FILE(GLOB SOURCES "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.c")
 # ------------------------------- Platform Guards -------------------------------
 # I only allow platforms I have tested on, though you are free to remove this section and try it on something else
 
-if ((NOT (( CMAKE_SYSTEM_NAME STREQUAL "Darwin") OR (CMAKE_SYSTEM_NAME STREQUAL "Windows"))) OR (NOT CMAKE_SIZEOF_VOID_P EQUAL 8))
+if ((NOT (( CMAKE_SYSTEM_NAME STREQUAL "Windows") OR (CMAKE_SYSTEM_NAME STREQUAL "Darwin"))) OR (NOT CMAKE_SIZEOF_VOID_P EQUAL 8))
   message(FATAL_ERROR "${PROJECT_NAME} only supports 64-bit MacOS and Windows systems!")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  add_compile_definitions(PLATFORM_WINDOWS="")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  add_compile_definitions(PLATFORM_DARWIN="")
 endif()
 
 # ----------------------------- Dependencies/Packages ----------------------------
@@ -67,6 +71,15 @@ elseif(NOT TARGET Curses::Curses)
 endif()
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
   add_compile_definitions(-DNCURSES_STATIC)
+
+endif()
+
+if (DEFINED LIBPANEL)
+
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  set(LIBPANEL panelw)
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(LIBPANEL panel)
 endif()
 
 find_package(Lua REQUIRED)
@@ -86,12 +99,18 @@ endif()
 
 add_executable(${EXECUTABLE_NAME} ${SOURCES} "${MINIAUDIO}/miniaudio.c")
 
-if ((DEFINED NO_RUNTIME_DIRECTORY) AND (NO_RUNTIME_DIRECTORY EQUAL true))
+if (DEFINED NO_RUNTIME_DIRECTORY)
 
 elseif(DEFINED RUNTIME_DIRECTORY)
   target_compile_definitions(${EXECUTABLE_NAME} PUBLIC SOURCE_RUNTIME_DIRECTORY="${RUNTIME_DIRECTORY}/")
 else()
   target_compile_definitions(${EXECUTABLE_NAME} PUBLIC SOURCE_RUNTIME_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
+endif()
+
+if (DEFINED FORCE_WINDOW_REFRESH)
+  if(${FORCE_WINDOW_REFRESH})
+    target_compile_definitions(${EXECUTABLE_NAME} PUBLIC FORCE_WINDOW_REFRESH="")
+  endif()
 endif()
 
 # ----------------------------- Include Directories -----------------------------
@@ -106,5 +125,5 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC
 target_link_libraries(${EXECUTABLE_NAME} 
   Lua::Lua
   Curses::Curses
-  panelw
+  ${LIBPANEL}
 )

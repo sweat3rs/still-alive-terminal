@@ -71,7 +71,7 @@ Window::Window()
 		s_globalErrorStatus = TERMINAL_NOT_SUPPORTED;
 		return;
 	}
-    Refresh();
+    wrefresh(m_window);
 
     m_panel = new_panel(m_window);
 	SetTop();
@@ -100,7 +100,7 @@ Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty
 		s_globalErrorStatus = TERMINAL_NOT_SUPPORTED;
 		return;
 	}
-    Refresh();
+    wrefresh(m_window);
 
     m_panel = new_panel(m_window);
 	SetTop();
@@ -257,7 +257,9 @@ void Window::SetScrollOk(bool value)
 
 void Window::Refresh() 
 {
+#if defined(PLATFORM_WINDOWS) || defined(FORCE_WINDOW_REFRESH)
     wrefresh(m_window);
+#endif
 }
 
 Vec2 Window::GetGlobalCursorPosition()
