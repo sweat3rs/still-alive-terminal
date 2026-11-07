@@ -8,6 +8,7 @@ Some **Dependencies** are included as submodules in this repo, but you will need
 - Ncurses with the panel library
 - A Lua interpreter / C library
 
+> If you are building on windows, installing ncurses and lua with msys2/mingw is recommended
 
 ---
 **Clone** the project:<br>
@@ -27,7 +28,7 @@ Build using cmake, for example:
 
 >$ cd build
 
->$ cmake .
+>$ cmake ..
 
 >$ make
 ~~~
@@ -56,6 +57,7 @@ Config options:
 - > `lyric_print_speed` / `credits_print_speed`, base print speed for the text animations, changing this alone will mess up timing
 - > `icons_file` = a string for the name of the icons lua file, relative to the runtime directory. This is the file that holds the ascii art
 - > `lyrics_file` / `credits_file` / `icons_timing` = strings for the names of csv files, relative to the runtime directory, with text and timing info.
+- > `ignore_warnings`= a bool that sets the --ignore-warnings flag true if it is not passed as a flag.
 
 
 ## Terminal Compatability:

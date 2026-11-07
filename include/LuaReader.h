@@ -7,6 +7,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <cstdint>
 
 namespace term {
     class Lua

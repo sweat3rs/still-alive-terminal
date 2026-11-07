@@ -52,6 +52,7 @@ Error Window::s_globalErrorStatus{NONE};
 
 Window::Window()
 {
+	if (s_globalErrorStatus != NONE) return;
     if (s_numWindows == 0) {
         Error error = initNCurses();
         if (error != NONE) {
@@ -62,20 +63,25 @@ Window::Window()
     s_numWindows++;
     m_colorIndex = s_counter++;
 
-    //Vec2 size = GetTerminalSize();
-
     m_position = {0,0};
-    m_scale = {(u_int16_t)COLS, (uint16_t)LINES};
+    m_scale = {(uint16_t)COLS, (uint16_t)LINES};
 
     m_window = newwin(m_scale.y, m_scale.x, m_position.y, m_position.x);
-    refresh();
+    if (!m_window) {
+		s_globalErrorStatus = TERMINAL_NOT_SUPPORTED;
+		return;
+	}
+    Refresh();
 
     m_panel = new_panel(m_window);
-    Update();
+	SetTop();
+
+    UpdateScr();
 }
 
 Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty)
 {
+    if (s_globalErrorStatus != NONE) return;
     if (s_numWindows == 0) {
         Error error = initNCurses();
         if (error != NONE) {
@@ -90,10 +96,16 @@ Window::Window(uint32_t width, uint32_t height, uint32_t startx, uint32_t starty
     m_scale = {(int32_t)width, (int32_t)height};
 
     m_window = newwin(m_scale.y, m_scale.x, m_position.y, m_position.x);
-    refresh();
+    if (!m_window) {
+		s_globalErrorStatus = TERMINAL_NOT_SUPPORTED;
+		return;
+	}
+    Refresh();
 
     m_panel = new_panel(m_window);
-    Update();
+	SetTop();
+
+    UpdateScr();
 }
 
 Window::Window(Vec2 size, Vec2 position)
@@ -147,7 +159,7 @@ Error Window::DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
     return NONE;
 }
 
-Error Window::Update()
+Error Window::UpdateScr()
 {
     update_panels();
     doupdate();
@@ -206,16 +218,6 @@ void Window::Hide()
     m_hidden = true;
 }
 
-void Window::FillBaseScreenColor(uint16_t colorIndex)
-{
-    if (!s_hasColors || s_numWindows == 0) return;
-
-    init_pair(0, -1, colorIndex);
-    bkgd(COLOR_PAIR(0));
-
-    refresh();
-}
-
 void Window::FillBackgroundColor(uint16_t colorIndex)
 {
     if (!s_hasColors) return;
@@ -253,7 +255,7 @@ void Window::SetScrollOk(bool value)
     scrollok(m_window, value);
 }
 
-void Window::refreshWindow() 
+void Window::Refresh() 
 {
     wrefresh(m_window);
 }
@@ -280,7 +282,7 @@ Vec2 Window::GetTerminalSize()
     return {(int32_t)x, (int32_t)y};
 }
 
-void Window::globalRefresh()
+void Window::refreshSTDSCR()
 {
     refresh();
 }
@@ -288,6 +290,11 @@ void Window::globalRefresh()
 Error Window::initNCurses() 
 {
     initscr();
+	if (stdscr == nullptr) {
+		std::cerr << "Failed to initialize ncurses" << std::endl;
+		return TERMINAL_NOT_SUPPORTED;
+	}
+
     noecho();
     cbreak();
     keypad(stdscr, TRUE);
@@ -297,7 +304,7 @@ Error Window::initNCurses()
     s_hasColors = has_colors();
     if (!s_hasColors && !s_ignoreWarnings) {
         destroyNCurses();
-        std::cerr << "Your terminal doesn't support colors." << std::endl;
+        std::cerr << "Your terminal doesn't support colors.\n" << std::endl;
         std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
         return TERMINAL_NOT_SUPPORTED;
     }
@@ -305,7 +312,7 @@ Error Window::initNCurses()
     s_canChangeColors = can_change_color();
     if (!s_canChangeColors && !s_ignoreWarnings) {
         destroyNCurses();
-        std::cerr << "Your terminal doesn't support custom colors. Colors might be inaccurate.";
+        std::cerr << "Your terminal doesn't support custom colors. Colors might be inaccurate.\n";
         std::cerr << "To ignore this, start the program with the --ignore-warnings flag." << std::endl;
         return TERMINAL_NOT_SUPPORTED;
     }

@@ -25,6 +25,7 @@
 #include <algorithm>
 
 #include <filesystem>
+#include <cstring>
 
 #include <string>
 #include <chrono>
@@ -110,10 +111,13 @@ int main(int argc, char *argv[])
     auto volume = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "volume");
     auto song_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "song_file");
     auto start_delay = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "start_delay");
-    auto print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyric_print_speed");
+    
+	auto print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyric_print_speed");
     auto credits_print_speed = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "credits_print_speed");
-    auto icons_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_file");
-    auto icons_timing = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_timing");
+    
+	auto icons_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_file");
+    
+	auto icons_timing = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "icons_timing");
     auto lyrics_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "lyrics_file");
     auto credits_file = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "credits_file");
 
@@ -123,6 +127,11 @@ int main(int argc, char *argv[])
         std::cerr << "Lua config file parsing failed!" << std::endl;
         return 1;
     }
+
+	auto ignore_warnings = lua.GetFieldFromTable(LUA_CONFIG_TABLE, "ignore_warnings");
+	if (ignore_warnings.type == Lua::BOOL) {
+		Window::s_ignoreWarnings = Window::s_ignoreWarnings || ignore_warnings.value.boolean;
+	}
 
     // Images
     std::array<std::string, 11> imageNames = {
@@ -175,7 +184,7 @@ int main(int argc, char *argv[])
     
     windows[1] = Window{windowWidths, lyricWindowHeight, BUFFER_SIZE, BUFFER_SIZE};
     windows[2] = Window{windowWidths, creditWindowHeight, (windowWidths + 2) + BUFFER_SIZE, BUFFER_SIZE};
-    windows[3] = Window{(uint32_t)imageSize.x, (uint32_t)imageSize.y + BUFFER_SIZE*2, ((windowWidths + 2) + BUFFER_SIZE) + (windowWidths/2 - imageSize.x/2), (creditWindowHeight + BUFFER_SIZE) + std::min((termSize.y - (creditWindowHeight + BUFFER_SIZE)/2 - imageSize.y/2), (uint32_t)0)};
+    windows[3] = Window{(uint32_t)imageSize.x, (uint32_t)imageSize.y + BUFFER_SIZE*2, ((windowWidths + 2) + BUFFER_SIZE) + (windowWidths/2 - imageSize.x/2), (creditWindowHeight + BUFFER_SIZE) + std::max(((termSize.y - creditWindowHeight + BUFFER_SIZE)/2 - imageSize.y/2), (uint32_t)0)};
 
     windows[4] = Window{windowWidths - 2, lyricWindowHeight - 2, BUFFER_SIZE + 1, BUFFER_SIZE + 1};
     windows[5] = Window{windowWidths - 2, creditWindowHeight - 2, (windowWidths + 2) + BUFFER_SIZE + 1, BUFFER_SIZE + 1};
@@ -183,12 +192,13 @@ int main(int argc, char *argv[])
     Window::ChangeColorValue(COLOR_BLACK, Color{30,30,30});
     Window::ChangeColorValue(COLOR_YELLOW, Color{1000, 700, 0});
 
-    for (auto& window : windows) {
-        window.FillBackgroundColor(COLOR_BLACK);
-        window.SetColor(COLOR_YELLOW, COLOR_BLACK);
+    for (auto& win : windows) {
+        win.FillBackgroundColor(COLOR_BLACK);
+        win.SetColor(COLOR_YELLOW, COLOR_BLACK);
+		win.Refresh();
     }
 
-    Window::Update();
+    Window::UpdateScr();
 
     windows[1].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
     windows[2].DrawBorder('|', '|', '-', '-', ' ', ' ', ' ', ' ');
@@ -259,7 +269,8 @@ int main(int argc, char *argv[])
     auto c = getch();
     do {
         std::scoped_lock<std::mutex> lock(windowMutex);
-        Window::Update();
+		for (auto& win : windows) win.Refresh();
+        Window::UpdateScr();
     } while (c = getch(), c != 'q' && c != KEY_RESIZE && lyricPrinter.IsRunning());
 
     // Stop

@@ -2,6 +2,7 @@
 #include "AudioPlayer.h"
 
 #include <algorithm>
+#include <cstdint>
 
 using namespace term;
 

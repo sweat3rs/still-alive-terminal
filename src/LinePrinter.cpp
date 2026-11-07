@@ -51,7 +51,8 @@ void CursorFlash::displayCharacter()
 {
     if (m_isShowing) {
         std::scoped_lock<std::mutex> lock(m_windowMutex);
-        Window::Update();
+		m_window.Refresh();
+        //Window::UpdateScr();
         m_window.JustifyCursorPosition();
         m_window.AddCharacter(m_flashCharacter);
         auto pos = m_window.GetCursorPosition();
@@ -60,7 +61,8 @@ void CursorFlash::displayCharacter()
     }
     else {
         std::scoped_lock<std::mutex> lock(m_windowMutex);
-        Window::Update();
+		m_window.Refresh();
+        //Window::UpdateScr();
         m_window.JustifyCursorPosition();
         m_window.AddCharacter(' ');
         auto pos = m_window.GetCursorPosition();

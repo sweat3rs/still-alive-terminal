@@ -5,12 +5,12 @@ Start-Time,Speed,Text,operator
 -,-,,newline
 -,-,,newline
 
-7.5,-,"This was a triumph.",newline
+7.7,-,"This was a triumph.",newline
 11.5,-,"I'm making a note here:",newline
 13.7,1.35,"HUGE ",-
 -,1.5,"SUCCESS.",newline
 
-16.3,1.5,"It's hard to overstate",newline
+16.3,1.6,"It's hard to overstate",newline
 -,2.3,"My satisfaction.",newline
 
 23.4,-,"Aperture Science.",newline
@@ -65,7 +65,7 @@ Start-Time,Speed,Text,operator
 -,0.55,"Forms FORM-55551-6",newline
 -,0.7,"Personnel File Addendum Addendum:",newline
 108.9,-,,newline
--,2.3,"One last thing:",newline
+-,2.4,"One last thing:",newline
 -,-,,newline
 
 111.4,-,"Go ahead and leave",-

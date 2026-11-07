@@ -10,6 +10,7 @@
 #endif
 
 #include <iostream>
+#include <cstdint>
 
 #define NO_CHANGE -1
 
@@ -54,50 +55,46 @@ namespace term
 
             void SetCursorHome() { SetCursorPosition(m_cursorHomePos); }
 
+			Vec2 GetCursorPosition();
+            void MoveCursor(Vec2 delta);
+            void SetCursorPosition(Vec2 position);
+
+			Vec2 GetWindowPosition();
+			void MoveWindow(Vec2 delta);
+
+            Vec2 GetWindowSize();
+            void SetWindowPosition(Vec2 position);
+
             Error Print(const std::string& string);
             Error AddCharacter(const char& ch);
             Error DrawBorder(chtype left, chtype right, chtype top, chtype bottom,
                 chtype tlc = 0, chtype trc = 0, chtype blc = 0, chtype brc = 0);
 
-            void SetTop();
-
-            void SetScrollOk(bool value);
+			void Clear();
+			void Refresh();
 
             static Error GetGlobalErrorState() { return s_globalErrorStatus; }
 
-            Vec2 GetCursorPosition();
-            //void MoveCursor(Vec2 delta);
-            void SetCursorPosition(Vec2 position);
-
-            Vec2 GetWindowPosition();
-            Vec2 GetWindowSize();
-            void MoveWindow(Vec2 delta);
-            void SetWindowPosition(Vec2 position);
-
             void FillBackgroundColor(uint16_t colorIndex);
             void SetColor(int16_t foreground, int16_t background);
+			static void ChangeColorValue(uint16_t colorIndex, Color color);
             //static void ResetColors();
-
-            static void FillBaseScreenColor(uint16_t colorIndex);
-
-            void Clear();
-
-            static void ChangeColorValue(uint16_t colorIndex, Color color);
 
             void Show();
             void Hide();
+			void SetTop();
+			void SetScrollOk(bool value);
 
-            static Error Update(); // Panels refresh
+            static Error UpdateScr(); // Panels refresh
             static Vec2 GetGlobalCursorPosition();
             static Vec2 GetTerminalSize();
 
             static bool s_ignoreWarnings;
 
         private:
-            void refreshWindow();
             void storeCursorPosition();
 
-            static void globalRefresh(); // refresh()
+            static void refreshSTDSCR(); // refresh()
             static Error initNCurses();
             static Error destroyNCurses();
 
